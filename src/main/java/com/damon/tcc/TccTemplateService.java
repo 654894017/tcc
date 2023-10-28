@@ -3,6 +3,7 @@ package com.damon.tcc;
 import cn.hutool.core.thread.NamedThreadFactory;
 import com.damon.tcc.exception.BusinessException;
 import com.damon.tcc.exception.TccException;
+import com.damon.tcc.log.ITccLogService;
 import com.damon.tcc.log.TccLog;
 import com.damon.tcc.log.TccLogService;
 import org.slf4j.Logger;
@@ -18,22 +19,20 @@ import java.util.concurrent.TimeUnit;
 public abstract class TccTemplateService<R, O extends BizId> {
     private final Logger log = LoggerFactory.getLogger(TccTemplateService.class);
     private final ExecutorService executorService;
-    private final TccLogService tccLogService;
-    private final IIDGenerateService idGateway;
+    private final ITccLogService tccLogService;
+    private final IIDGenerateService idGenerateService;
     private final LocalTransactionService localTransactionService;
     private final String bizType;
-
-    public TccTemplateService(String bizType, TccLogService tccLogService, IIDGenerateService idGateway, LocalTransactionService localTransactionService) {
-        this.tccLogService = tccLogService;
-        this.idGateway = idGateway;
-        this.bizType = bizType;
-        this.localTransactionService = localTransactionService;
-        this.executorService = new ThreadPoolExecutor(64, 256,
-                120L, TimeUnit.SECONDS, new LinkedBlockingQueue<>(512),
+    public TccTemplateService(TccConfig config) {
+        this.tccLogService = config.getTccLogService();
+        this.idGenerateService = config.getIdGenerateService();
+        this.bizType = config.getBizType();
+        this.localTransactionService = config.getLocalTransactionService();
+        this.executorService = new ThreadPoolExecutor(config.getAsyncThreadMinNumber(), config.getAsyncThreadMaxNumber(),
+                120L, TimeUnit.SECONDS, new LinkedBlockingQueue<>(config.getQueueSize()),
                 new NamedThreadFactory("tcc-aync-pool-", false), new ThreadPoolExecutor.CallerRunsPolicy()
         );
     }
-
     /**
      * @param object
      * @return
@@ -41,7 +40,7 @@ public abstract class TccTemplateService<R, O extends BizId> {
      * @throws TccException
      */
     public R process(O object) {
-        TccLog tccLog = new TccLog(idGateway.nextId(), object.getBizId());
+        TccLog tccLog = new TccLog(idGenerateService.nextId(), object.getBizId());
         tccLogService.create(tccLog);
         log.info("业务类型: {}, 业务id : {}, 创建事务日志成功", bizType, object.getBizId());
         try {
