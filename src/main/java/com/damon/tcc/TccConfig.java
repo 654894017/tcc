@@ -1,25 +1,23 @@
 package com.damon.tcc;
 
+import com.damon.tcc.id.IIDGenerateService;
 import com.damon.tcc.log.ITccLogService;
+import com.damon.tcc.transaction.ILocalTransactionService;
 
 public class TccConfig {
-
     private IIDGenerateService idGenerateService;
-
-    private LocalTransactionService localTransactionService;
-
+    private ILocalTransactionService localTransactionService;
     private ITccLogService tccLogService;
-
     private String bizType;
     private Integer asyncThreadMinNumber;
     private Integer asyncThreadMaxNumber;
     private Integer queueSize;
 
-    public TccConfig(String bizType, IIDGenerateService idGenerateService, LocalTransactionService localTransactionService, ITccLogService tccLogService) {
+    public TccConfig(String bizType, IIDGenerateService idGenerateService, ILocalTransactionService localTransactionService, ITccLogService tccLogService) {
         this(idGenerateService, localTransactionService, tccLogService, bizType, 64, 256, 512);
     }
 
-    public TccConfig(IIDGenerateService idGenerateService, LocalTransactionService localTransactionService,
+    public TccConfig(IIDGenerateService idGenerateService, ILocalTransactionService localTransactionService,
                      ITccLogService tccLogService, String bizType, Integer asyncThreadMinNumber,
                      Integer asyncThreadMaxNumber, Integer queueSize) {
         this.idGenerateService = idGenerateService;
@@ -35,7 +33,7 @@ public class TccConfig {
         return idGenerateService;
     }
 
-    public LocalTransactionService getLocalTransactionService() {
+    public ILocalTransactionService getLocalTransactionService() {
         return localTransactionService;
     }
 

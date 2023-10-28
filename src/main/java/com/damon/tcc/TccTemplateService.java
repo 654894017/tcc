@@ -3,12 +3,12 @@ package com.damon.tcc;
 import cn.hutool.core.thread.NamedThreadFactory;
 import com.damon.tcc.exception.BusinessException;
 import com.damon.tcc.exception.TccException;
+import com.damon.tcc.id.IIDGenerateService;
 import com.damon.tcc.log.ITccLogService;
 import com.damon.tcc.log.TccLog;
-import com.damon.tcc.log.TccLogService;
+import com.damon.tcc.transaction.ILocalTransactionService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -21,8 +21,9 @@ public abstract class TccTemplateService<R, O extends BizId> {
     private final ExecutorService executorService;
     private final ITccLogService tccLogService;
     private final IIDGenerateService idGenerateService;
-    private final LocalTransactionService localTransactionService;
+    private final ILocalTransactionService localTransactionService;
     private final String bizType;
+
     public TccTemplateService(TccConfig config) {
         this.tccLogService = config.getTccLogService();
         this.idGenerateService = config.getIdGenerateService();
@@ -33,6 +34,7 @@ public abstract class TccTemplateService<R, O extends BizId> {
                 new NamedThreadFactory("tcc-aync-pool-", false), new ThreadPoolExecutor.CallerRunsPolicy()
         );
     }
+
     /**
      * @param object
      * @return
@@ -91,6 +93,7 @@ public abstract class TccTemplateService<R, O extends BizId> {
 
     /**
      * 执行本地事务方法和tcc事务日志在一个事务域内处理
+     *
      * @param object
      * @return
      */
@@ -99,6 +102,14 @@ public abstract class TccTemplateService<R, O extends BizId> {
     protected abstract void commitPhase(O object);
 
     protected abstract void cancelPhase(O object);
+
+    protected TccLogIterator queryFailedLogs(Integer checkedCount, Integer pageSize) {
+        Integer failedLogsTotal = tccLogService.getFailedLogsTotal();
+        Integer totalPage = failedLogsTotal / pageSize;
+        return new TccLogIterator(totalPage, pageNumber ->
+                tccLogService.queryFailedLogs(checkedCount, pageSize, pageNumber)
+        );
+    }
 
     public void check(O object) {
         TccLog tccLog = tccLogService.get(object.getBizId());
@@ -111,15 +122,19 @@ public abstract class TccTemplateService<R, O extends BizId> {
             log.warn("对应的tcclog日志信息已回滚或已提交, 不执行提交状态检查,业务类型: {}, 业务id :{}", bizType, object.getBizId());
             return;
         }
-
-        if (tccLog.isLocalCommited()) {
-            commitPhase(object);
-            tccLogService.commit(tccLog);
-            log.info("业务类型: {}, 业务id :{}, 异步重试commit成功", bizType, object.getBizId());
-        } else {
-            cancelPhase(object);
-            tccLogService.rollback(tccLog);
-            log.info("业务类型: {}, 业务id :{}, 异步重试cancel成功", bizType, object.getBizId());
+        try {
+            if (tccLog.isLocalCommited()) {
+                commitPhase(object);
+                tccLogService.commit(tccLog);
+                log.info("业务类型: {}, 业务id :{}, 异步重试commit成功", bizType, object.getBizId());
+            } else {
+                cancelPhase(object);
+                tccLogService.rollback(tccLog);
+                log.info("业务类型: {}, 业务id :{}, 异步重试cancel成功", bizType, object.getBizId());
+            }
+        } catch (Exception e) {
+            log.error("业务类型: {}, 业务id :{}, 异步check失败", bizType, object.getBizId(), e);
+            tccLogService.updateCheckCount(tccLog);
         }
     }
 

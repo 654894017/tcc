@@ -1,10 +1,10 @@
-package com.damon.tcc;
+package com.damon.tcc.transaction;
 
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.function.Supplier;
 
-public class LocalTransactionService {
+public class SpringTransactionService {
     @Transactional
     public <R> R executeLocalTransaction(Supplier<R> supplier) {
         return supplier.get();
