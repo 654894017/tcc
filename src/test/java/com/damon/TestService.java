@@ -13,7 +13,7 @@ public class TestService extends TccTemplateService<Long, Test> {
         super(config);
     }
 
-    public void executeCheck() {
+    public void checkTrasactionStatus() {
         TccFailedLogIterator iterator = super.queryFailedLogs(5, 100);
         while (iterator.hasNext()) {
             List<TccLog> tccLogList = iterator.next();

@@ -35,6 +35,8 @@ public abstract class TccTemplateService<R, O extends BizId> {
         );
     }
 
+    public abstract void checkTrasactionStatus();
+
     /**
      * @param object
      * @return

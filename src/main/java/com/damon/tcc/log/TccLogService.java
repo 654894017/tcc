@@ -4,12 +4,10 @@ import com.damon.tcc.exception.OptimisticLockException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.BeanPropertyRowMapper;
 import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.stereotype.Repository;
 
 import javax.sql.DataSource;
 import java.util.List;
 
-@Repository
 public class TccLogService implements ITccLogService {
     private final String INSETR_TCC_LOG = "insert into tcc_log_%s (id, biz_id, status, version, last_update_time, create_time) values( ? ,? , ? ,?, ? ,?)";
     private final String UPDATE_TCC_LOG = "update tcc_log_%s set version = ? , status = ?, last_update_time = ? where id = ? , version = ?";
