@@ -103,10 +103,10 @@ public abstract class TccTemplateService<R, O extends BizId> {
 
     protected abstract void cancelPhase(O object);
 
-    protected TccLogIterator queryFailedLogs(Integer checkedCount, Integer pageSize) {
+    protected TccFailedLogIterator queryFailedLogs(Integer checkedCount, Integer pageSize) {
         Integer failedLogsTotal = tccLogService.getFailedLogsTotal();
         Integer totalPage = failedLogsTotal / pageSize;
-        return new TccLogIterator(totalPage, pageNumber ->
+        return new TccFailedLogIterator(totalPage, pageNumber ->
                 tccLogService.queryFailedLogs(checkedCount, pageSize, pageNumber)
         );
     }

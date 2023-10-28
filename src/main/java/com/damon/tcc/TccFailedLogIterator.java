@@ -7,12 +7,12 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.function.Function;
 
-public class TccLogIterator implements Iterator {
+public class TccFailedLogIterator implements Iterator {
     private Integer totalPage;
     private Integer currentPage = 0;
     private Function<Integer, List<TccLog>> function;
 
-    public TccLogIterator(Integer totalPage, Function<Integer, List<TccLog>> function) {
+    public TccFailedLogIterator(Integer totalPage, Function<Integer, List<TccLog>> function) {
         this.totalPage = totalPage;
         this.function = function;
     }

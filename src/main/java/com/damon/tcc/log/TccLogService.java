@@ -16,7 +16,7 @@ public class TccLogService implements ITccLogService {
     private final String CHECK_TCC_LOG = "update tcc_log_%s set version = ? , last_update_time = ? , checked_count = ? where id = ? , version = ?";
     private final String GET_TCC_LOG = "select * from tcc_log_%s where biz_id = ? ";
     private final String GET_TCC_LOG_TOTAL = "select count(*) from tcc_log_%s where in (1,3) and checked_count < ?";
-    private final String QUERY_FAILED_TCC_LOG = "select * from tcc_log_%s where stauts in (1,3) and checked_count < ? order by last_update_time limit ?, ?";
+    private final String QUERY_FAILED_TCC_LOG = "select * from tcc_log_%s where stauts in (1,3) and checked_count < ? order by create_time limit ?, ?";
     private final String bizType;
     private JdbcTemplate jdbcTemplate;
 
