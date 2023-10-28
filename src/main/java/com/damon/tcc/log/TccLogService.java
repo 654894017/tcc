@@ -1,7 +1,6 @@
 package com.damon.tcc.log;
 
 import com.damon.tcc.exception.OptimisticLockException;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.BeanPropertyRowMapper;
 import org.springframework.jdbc.core.JdbcTemplate;
 
@@ -13,12 +12,11 @@ public class TccLogService implements ITccLogService {
     private final String UPDATE_TCC_LOG = "update tcc_log_%s set version = ? , status = ?, last_update_time = ? where id = ? , version = ?";
     private final String CHECK_TCC_LOG = "update tcc_log_%s set version = ? , last_update_time = ? , checked_count = ? where id = ? , version = ?";
     private final String GET_TCC_LOG = "select * from tcc_log_%s where biz_id = ? ";
-    private final String GET_TCC_LOG_TOTAL = "select count(*) from tcc_log_%s where in (1,3) and checked_count < ?";
+    private final String GET_TCC_FAILED_LOG_TOTAL = "select count(*) from tcc_log_%s where in (1,3) and checked_count < ?";
     private final String QUERY_FAILED_TCC_LOG = "select * from tcc_log_%s where stauts in (1,3) and checked_count < ? order by create_time limit ?, ?";
     private final String bizType;
     private JdbcTemplate jdbcTemplate;
 
-    @Autowired
     public TccLogService(DataSource dataSource, String bizType) {
         this.jdbcTemplate = new JdbcTemplate(dataSource);
         this.bizType = bizType;
@@ -76,7 +74,7 @@ public class TccLogService implements ITccLogService {
 
     @Override
     public List<TccLog> queryFailedLogs(Integer checkedCount, Integer pageSize, Integer pageNumber) {
-        return jdbcTemplate.query(QUERY_FAILED_TCC_LOG,
+        return jdbcTemplate.query(String.format(QUERY_FAILED_TCC_LOG, bizType),
                 new BeanPropertyRowMapper<>(TccLog.class),
                 checkedCount,
                 pageNumber * pageSize,
@@ -86,7 +84,7 @@ public class TccLogService implements ITccLogService {
 
     @Override
     public Integer getFailedLogsTotal() {
-        return jdbcTemplate.queryForObject(GET_TCC_LOG_TOTAL, Integer.class);
+        return jdbcTemplate.queryForObject(String.format(GET_TCC_FAILED_LOG_TOTAL, bizType), Integer.class);
     }
 
 
