@@ -13,8 +13,15 @@ public class BusinessException extends RuntimeException {
         this.errorCode = errorCode;
     }
 
+    public BusinessException(String message, Throwable cause) {
+        super(message, cause);
+    }
+
     public BusinessException(String message) {
         super(message, null, false, false);
     }
 
+    public String getErrorCode() {
+        return errorCode;
+    }
 }

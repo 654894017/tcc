@@ -38,6 +38,9 @@ public abstract class TccTemplateService<R, O extends BizId> {
     public abstract void checkTrasactionStatus();
 
     /**
+     *
+     *
+     *
      * @param object
      * @return
      * @throws BusinessException
@@ -76,7 +79,7 @@ public abstract class TccTemplateService<R, O extends BizId> {
             } catch (Exception e) {
                 log.error("业务类型: {}, 业务id : {}, 执行回调检查失败", bizType, object.getBizId(), e);
             }
-            throw exception;
+            throw new TccException(exception);
         }
         log.info("业务类型: {}, 业务id : {}, commit本地事务成功", bizType, object.getBizId());
         executorService.submit(() -> {
@@ -91,6 +94,13 @@ public abstract class TccTemplateService<R, O extends BizId> {
         return result;
     }
 
+    /**
+     * 业务逻辑错误，建议通过返回自定义异常 BusinessException,
+     *
+     * 服务调用者可以比较好的应对较复杂的业务逻辑
+     *
+     * @param object
+     */
     protected abstract void tryPhase(O object);
 
     /**
