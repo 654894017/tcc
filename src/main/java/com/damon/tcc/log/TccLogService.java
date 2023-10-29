@@ -77,8 +77,8 @@ public class TccLogService implements ITccLogService {
         return jdbcTemplate.query(String.format(QUERY_FAILED_TCC_LOG, bizType),
                 new BeanPropertyRowMapper<>(TccLog.class),
                 checkedCount,
-                pageNumber * pageSize,
-                (pageNumber + 1) * pageSize
+                (pageNumber - 1) * pageSize,
+                pageSize
         );
     }
 
