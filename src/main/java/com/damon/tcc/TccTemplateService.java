@@ -10,10 +10,12 @@ import com.damon.tcc.transaction.ILocalTransactionService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Function;
 
 
 public abstract class TccTemplateService<R, O extends BizId> {
@@ -35,18 +37,40 @@ public abstract class TccTemplateService<R, O extends BizId> {
         );
     }
 
-    public abstract void checkTrasactionStatus();
+    protected TccFailedLogIterator queryFailedLogs(Integer checkedCount, Integer pageSize) {
+        Integer failedLogsTotal = tccLogService.getFailedLogsTotal();
+        Integer totalPage = failedLogsTotal / pageSize;
+        return new TccFailedLogIterator(totalPage, pageNumber ->
+                tccLogService.queryFailedLogs(checkedCount, pageSize, pageNumber)
+        );
+    }
 
     /**
+     * 执行事务状态检查，供上游业务系统调用
      *
-     *
-     *
+     * @param callbackParameter 获取事务日志对应的业务关联信息，用于执行回调检查. 找不到对应事务日志关联的业务信息需要返回null.
+     */
+    protected void executeCheck(Function<Long, O> callbackParameter) {
+        TccFailedLogIterator iterator = queryFailedLogs(5, 100);
+        while (iterator.hasNext()) {
+            List<TccLog> tccLogs = iterator.next();
+            tccLogs.forEach(tccLog -> {
+                O object = callbackParameter.apply(tccLog.getBizId());
+                if (object != null) {
+                    this.check(object, tccLog);
+                } else {
+                    log.error("无效的事务日志信息, 业务类型: {}, 业务id : {}, ", bizType, tccLog.getBizId());
+                }
+            });
+        }
+    }
+    /**
      * @param object
      * @return
      * @throws BusinessException
      * @throws TccException
      */
-    public R process(O object) {
+    protected R process(O object) {
         TccLog tccLog = new TccLog(idGenerateService.nextId(), object.getBizId());
         tccLogService.create(tccLog);
         log.info("业务类型: {}, 业务id : {}, 创建事务日志成功", bizType, object.getBizId());
@@ -96,7 +120,7 @@ public abstract class TccTemplateService<R, O extends BizId> {
 
     /**
      * 业务逻辑错误，建议通过返回自定义异常 BusinessException,
-     *
+     * <p>
      * 服务调用者可以比较好的应对较复杂的业务逻辑
      *
      * @param object
@@ -115,21 +139,25 @@ public abstract class TccTemplateService<R, O extends BizId> {
 
     protected abstract void cancelPhase(O object);
 
-    protected TccFailedLogIterator queryFailedLogs(Integer checkedCount, Integer pageSize) {
-        Integer failedLogsTotal = tccLogService.getFailedLogsTotal();
-        Integer totalPage = failedLogsTotal / pageSize;
-        return new TccFailedLogIterator(totalPage, pageNumber ->
-                tccLogService.queryFailedLogs(checkedCount, pageSize, pageNumber)
-        );
-    }
 
-    public void check(O object) {
+    protected void check(O object){
         TccLog tccLog = tccLogService.get(object.getBizId());
         if (tccLog == null) {
             log.warn("找不到对应的tcclog日志信息, 业务类型: {}, 业务id :{}", bizType, object.getBizId());
             return;
         }
-
+        check(object, tccLog);
+    }
+    /**
+     * 检查事务是否成功
+     * <p>
+     * 1.如果事务状态为：已完成本地事务，则执行commit行为
+     * <p>
+     * 2.如果事务状态为：创建事务状态，则执行cancel行为
+     *
+     * @param object
+     */
+    protected void check(O object, TccLog tccLog) {
         if (tccLog.isCommited() || tccLog.isRollbacked()) {
             log.warn("对应的tcclog日志信息已回滚或已提交, 不执行提交状态检查,业务类型: {}, 业务id :{}", bizType, object.getBizId());
             return;

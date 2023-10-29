@@ -118,4 +118,18 @@ public class TccLog {
     public void setCreateTime(Long createTime) {
         this.createTime = createTime;
     }
+
+
+    @Override
+    public String toString() {
+        return "TccLog{" +
+                "id=" + id +
+                ", bizId=" + bizId +
+                ", status=" + status +
+                ", version=" + version +
+                ", checkedCount=" + checkedCount +
+                ", lastUpdateTime=" + lastUpdateTime +
+                ", createTime=" + createTime +
+                '}';
+    }
 }
