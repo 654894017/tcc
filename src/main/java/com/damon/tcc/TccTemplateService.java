@@ -1,9 +1,7 @@
 package com.damon.tcc;
 
 import cn.hutool.core.thread.NamedThreadFactory;
-import com.damon.tcc.exception.BusinessException;
-import com.damon.tcc.exception.TccException;
-import com.damon.tcc.id.IIDGenerateService;
+import cn.hutool.core.thread.ThreadUtil;
 import com.damon.tcc.log.ITccLogService;
 import com.damon.tcc.log.TccLog;
 import com.damon.tcc.transaction.ILocalTransactionService;
@@ -22,26 +20,26 @@ public abstract class TccTemplateService<R, O extends BizId> {
     private final Logger log = LoggerFactory.getLogger(TccTemplateService.class);
     private final ExecutorService executorService;
     private final ITccLogService tccLogService;
-    private final IIDGenerateService idGenerateService;
     private final ILocalTransactionService localTransactionService;
     private final String bizType;
+    private final TccConfig tccConfig;
 
     public TccTemplateService(TccConfig config) {
         this.tccLogService = config.getTccLogService();
-        this.idGenerateService = config.getIdGenerateService();
         this.bizType = config.getBizType();
         this.localTransactionService = config.getLocalTransactionService();
         this.executorService = new ThreadPoolExecutor(config.getAsyncThreadMinNumber(), config.getAsyncThreadMaxNumber(),
                 120L, TimeUnit.SECONDS, new LinkedBlockingQueue<>(config.getQueueSize()),
                 new NamedThreadFactory("tcc-aync-pool-", false), new ThreadPoolExecutor.CallerRunsPolicy()
         );
+        this.tccConfig = config;
     }
 
-    protected TccFailedLogIterator queryFailedLogs(Integer checkedCount, Integer pageSize) {
+    protected TccFailedLogIterator queryFailedLogs() {
         Integer failedLogsTotal = tccLogService.getFailedLogsTotal();
-        Integer totalPage = failedLogsTotal / pageSize;
+        Integer totalPage = failedLogsTotal / tccConfig.getTccFailedLogPageSize();
         return new TccFailedLogIterator(totalPage, pageNumber ->
-                tccLogService.queryFailedLogs(checkedCount, pageSize, pageNumber)
+                tccLogService.queryFailedLogs(tccConfig.getFailedCheckCount(), tccConfig.getTccFailedLogPageSize(), pageNumber)
         );
     }
 
@@ -51,11 +49,17 @@ public abstract class TccTemplateService<R, O extends BizId> {
      * @param callbackParameter 获取事务日志对应的业务关联信息，用于执行回调检查. 找不到对应事务日志关联的业务信息需要返回null.
      */
     protected void executeCheck(Function<Long, O> callbackParameter) {
-        TccFailedLogIterator iterator = queryFailedLogs(5, 100);
+        TccFailedLogIterator iterator = queryFailedLogs();
         while (iterator.hasNext()) {
             List<TccLog> tccLogs = iterator.next();
             tccLogs.forEach(tccLog -> {
-                O object = callbackParameter.apply(tccLog.getBizId());
+                O object;
+                try {
+                    object = callbackParameter.apply(tccLog.getBizId());
+                } catch (Exception e) {
+                    log.error("获取日志关联业务信息失败, 业务类型: {}, 业务id : {}, ", bizType, tccLog.getBizId(), e);
+                    return;
+                }
                 if (object != null) {
                     this.check(object, tccLog);
                 } else {
@@ -64,20 +68,19 @@ public abstract class TccTemplateService<R, O extends BizId> {
             });
         }
     }
+
     /**
      * @param object
      * @return
-     * @throws BusinessException
-     * @throws TccException
      */
     protected R process(O object) {
-        TccLog tccLog = new TccLog(idGenerateService.nextId(), object.getBizId());
+        TccLog tccLog = new TccLog(object.getBizId());
         tccLogService.create(tccLog);
         log.info("业务类型: {}, 业务id : {}, 创建事务日志成功", bizType, object.getBizId());
         try {
             tryPhase(object);
             log.info("业务类型: {}, 业务id : {}, 预执行成功", bizType, object.getBizId());
-        } catch (BusinessException businessException) {
+        } catch (Exception exception) {
             executorService.submit(() -> {
                 try {
                     cancelPhase(object);
@@ -87,9 +90,7 @@ public abstract class TccTemplateService<R, O extends BizId> {
                     log.error("业务类型: {}, 业务id : {}, 异步cancel失败", bizType, object.getBizId(), e);
                 }
             });
-            throw businessException;
-        } catch (Exception e) {
-            throw new TccException(e);
+            throw exception;
         }
         R result;
         try {
@@ -103,7 +104,7 @@ public abstract class TccTemplateService<R, O extends BizId> {
             } catch (Exception e) {
                 log.error("业务类型: {}, 业务id : {}, 执行回调检查失败", bizType, object.getBizId(), e);
             }
-            throw new TccException(exception);
+            throw exception;
         }
         log.info("业务类型: {}, 业务id : {}, commit本地事务成功", bizType, object.getBizId());
         executorService.submit(() -> {
@@ -140,7 +141,7 @@ public abstract class TccTemplateService<R, O extends BizId> {
     protected abstract void cancelPhase(O object);
 
 
-    protected void check(O object){
+    protected void check(O object) {
         TccLog tccLog = tccLogService.get(object.getBizId());
         if (tccLog == null) {
             log.warn("找不到对应的tcclog日志信息, 业务类型: {}, 业务id :{}", bizType, object.getBizId());
@@ -148,6 +149,7 @@ public abstract class TccTemplateService<R, O extends BizId> {
         }
         check(object, tccLog);
     }
+
     /**
      * 检查事务是否成功
      * <p>
@@ -158,6 +160,7 @@ public abstract class TccTemplateService<R, O extends BizId> {
      * @param object
      */
     protected void check(O object, TccLog tccLog) {
+
         if (tccLog.isCommited() || tccLog.isRollbacked()) {
             log.warn("对应的tcclog日志信息已回滚或已提交, 不执行提交状态检查,业务类型: {}, 业务id :{}", bizType, object.getBizId());
             return;
@@ -175,6 +178,7 @@ public abstract class TccTemplateService<R, O extends BizId> {
         } catch (Exception e) {
             log.error("业务类型: {}, 业务id :{}, 异步check失败", bizType, object.getBizId(), e);
             tccLogService.updateCheckCount(tccLog);
+            ThreadUtil.safeSleep(2000);
         }
     }
 

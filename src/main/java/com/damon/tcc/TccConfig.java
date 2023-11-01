@@ -1,36 +1,43 @@
 package com.damon.tcc;
 
-import com.damon.tcc.id.IIDGenerateService;
 import com.damon.tcc.log.ITccLogService;
 import com.damon.tcc.transaction.ILocalTransactionService;
 
 public class TccConfig {
-    private IIDGenerateService idGenerateService;
     private ILocalTransactionService localTransactionService;
     private ITccLogService tccLogService;
     private String bizType;
     private Integer asyncThreadMinNumber;
     private Integer asyncThreadMaxNumber;
     private Integer queueSize;
+    private Integer failedCheckCount;
+    private Integer tccFailedLogPageSize;
 
-    public TccConfig(String bizType, IIDGenerateService idGenerateService, ILocalTransactionService localTransactionService, ITccLogService tccLogService) {
-        this(idGenerateService, localTransactionService, tccLogService, bizType, 64, 256, 512);
+    public TccConfig(String bizType, ILocalTransactionService localTransactionService, ITccLogService tccLogService) {
+        this(bizType, localTransactionService, tccLogService,
+                64, 256, 512,
+                5, 100);
     }
 
-    public TccConfig(IIDGenerateService idGenerateService, ILocalTransactionService localTransactionService,
-                     ITccLogService tccLogService, String bizType, Integer asyncThreadMinNumber,
-                     Integer asyncThreadMaxNumber, Integer queueSize) {
-        this.idGenerateService = idGenerateService;
+    public TccConfig(String bizType, ILocalTransactionService localTransactionService, ITccLogService tccLogService, Integer asyncThreadMinNumber,
+                     Integer asyncThreadMaxNumber, Integer queueSize,
+                     Integer failedCheckCount, Integer tccFailedLogPageSize) {
         this.localTransactionService = localTransactionService;
         this.tccLogService = tccLogService;
         this.bizType = bizType;
         this.asyncThreadMinNumber = asyncThreadMinNumber;
         this.asyncThreadMaxNumber = asyncThreadMaxNumber;
         this.queueSize = queueSize;
+        this.failedCheckCount = failedCheckCount;
+        this.tccFailedLogPageSize = tccFailedLogPageSize;
     }
 
-    public IIDGenerateService getIdGenerateService() {
-        return idGenerateService;
+    public Integer getFailedCheckCount() {
+        return failedCheckCount;
+    }
+
+    public Integer getTccFailedLogPageSize() {
+        return tccFailedLogPageSize;
     }
 
     public ILocalTransactionService getLocalTransactionService() {

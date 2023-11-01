@@ -5,7 +5,7 @@ import java.util.List;
 public interface ITccLogService {
     void commit(TccLog tccLog);
 
-    void  commitLocal(TccLog tccLog);
+    void commitLocal(TccLog tccLog);
 
     void create(TccLog tccLog);
 

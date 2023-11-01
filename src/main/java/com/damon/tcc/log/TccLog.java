@@ -2,7 +2,6 @@ package com.damon.tcc.log;
 
 
 public class TccLog {
-    private Long id;
     private Long bizId;
     private Integer status;
     private int version;
@@ -10,8 +9,7 @@ public class TccLog {
     private Long lastUpdateTime;
     private Long createTime;
 
-    public TccLog(Long id, Long bizId) {
-        this.id = id;
+    public TccLog(Long bizId) {
         this.bizId = bizId;
         this.status = TccLogStatusEnum.CREATED.getStatus();
         this.version = 0;
@@ -61,14 +59,6 @@ public class TccLog {
 
     public boolean isRollbacked() {
         return this.status == TccLogStatusEnum.ROOBACKED.getStatus();
-    }
-
-    public Long getId() {
-        return id;
-    }
-
-    public void setId(Long id) {
-        this.id = id;
     }
 
     public Long getBizId() {
@@ -123,8 +113,7 @@ public class TccLog {
     @Override
     public String toString() {
         return "TccLog{" +
-                "id=" + id +
-                ", bizId=" + bizId +
+                "bizId=" + bizId +
                 ", status=" + status +
                 ", version=" + version +
                 ", checkedCount=" + checkedCount +

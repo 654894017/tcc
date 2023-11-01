@@ -8,13 +8,13 @@ import java.util.List;
 import java.util.function.Function;
 
 public class TccFailedLogIterator implements Iterator {
-    private Integer totalPage;
+    private final Integer totalPage;
+    private final Function<Integer, List<TccLog>> failedLogFunction;
     private Integer currentPage = 0;
-    private Function<Integer, List<TccLog>> function;
 
-    public TccFailedLogIterator(Integer totalPage, Function<Integer, List<TccLog>> function) {
+    public TccFailedLogIterator(Integer totalPage, Function<Integer, List<TccLog>> failedLogFunction) {
         this.totalPage = totalPage;
-        this.function = function;
+        this.failedLogFunction = failedLogFunction;
     }
 
     @Override
@@ -28,7 +28,7 @@ public class TccFailedLogIterator implements Iterator {
             return new ArrayList<>(0);
         }
         currentPage++;
-        return function.apply(currentPage);
+        return failedLogFunction.apply(currentPage);
     }
 
 }
