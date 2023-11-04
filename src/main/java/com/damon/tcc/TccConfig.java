@@ -15,7 +15,7 @@ public class TccConfig {
 
     public TccConfig(String bizType, ILocalTransactionService localTransactionService, ITccLogService tccLogService) {
         this(bizType, localTransactionService, tccLogService,
-                64, 256, 512,
+                4, 8, 512,
                 5, 100);
     }
 

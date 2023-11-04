@@ -8,7 +8,7 @@ import javax.sql.DataSource;
 import java.util.List;
 
 public class TccLogService implements ITccLogService {
-    private final String INSETR_TCC_LOG = "insert into tcc_log_%s (biz_id, status, version, last_update_time, create_time) values( ? , ? ,?, ? ,?)";
+    private final String INSETR_TCC_LOG = "insert into tcc_log_%s (biz_id, status, version, last_update_time, create_time) values(?, ?, ?, ?, ?)";
     private final String UPDATE_TCC_LOG = "update tcc_log_%s set version = ? , status = ?, last_update_time = ? where biz_id = ? , version = ?";
     private final String CHECK_TCC_LOG = "update tcc_log_%s set version = ? , last_update_time = ? , checked_count = ? where biz_id = ? , version = ?";
     private final String GET_TCC_LOG = "select * from tcc_log_%s where biz_id = ? ";
