@@ -4,6 +4,6 @@ CREATE TABLE `tcc_log` (
   `version` int(11) NOT NULL DEFAULT '0' COMMENT '版本号',
   `last_update_time` bigint(20) NOT NULL DEFAULT '0' COMMENT '最后更新时间',
   `create_time` bigint(20) NOT NULL DEFAULT '0' COMMENT '创建时间',
-  `checked_count` int(2) NOT NULL DEFAULT '0' COMMENT '失败检查次数',
+  `checked_times` int(2) NOT NULL DEFAULT '0' COMMENT '失败检查次数',
   PRIMARY KEY (`biz_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin COMMENT='事务日志表';

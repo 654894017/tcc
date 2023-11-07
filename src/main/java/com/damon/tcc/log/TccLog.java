@@ -5,7 +5,7 @@ public class TccLog {
     private Long bizId;
     private Integer status;
     private int version;
-    private int checkedCount;
+    private int checkedTimes;
     private Long lastUpdateTime;
     private Long createTime;
 
@@ -13,9 +13,9 @@ public class TccLog {
         this.bizId = bizId;
         this.status = TccLogStatusEnum.CREATED.getStatus();
         this.version = 0;
-        this.checkedCount = 0;
-        this.lastUpdateTime = System.currentTimeMillis();
-        this.createTime = this.lastUpdateTime;
+        this.checkedTimes = 0;
+        this.createTime = System.currentTimeMillis();
+        this.lastUpdateTime = createTime;
     }
 
     public TccLog() {
@@ -42,7 +42,7 @@ public class TccLog {
     public void check() {
         this.version = this.version + 1;
         this.lastUpdateTime = System.currentTimeMillis();
-        this.checkedCount = this.checkedCount + 1;
+        this.checkedTimes = this.checkedTimes + 1;
     }
 
     public boolean isCreated() {
@@ -85,12 +85,12 @@ public class TccLog {
         this.version = version;
     }
 
-    public int getCheckedCount() {
-        return checkedCount;
+    public int getCheckedTimes() {
+        return checkedTimes;
     }
 
-    public void setCheckedCount(int checkedCount) {
-        this.checkedCount = checkedCount;
+    public void setCheckedTimes(int checkedTimes) {
+        this.checkedTimes = checkedTimes;
     }
 
     public Long getLastUpdateTime() {
@@ -109,14 +109,13 @@ public class TccLog {
         this.createTime = createTime;
     }
 
-
     @Override
     public String toString() {
         return "TccLog{" +
                 "bizId=" + bizId +
                 ", status=" + status +
                 ", version=" + version +
-                ", checkedCount=" + checkedCount +
+                ", checkedTimes=" + checkedTimes +
                 ", lastUpdateTime=" + lastUpdateTime +
                 ", createTime=" + createTime +
                 '}';

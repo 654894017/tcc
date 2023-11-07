@@ -13,7 +13,6 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
-import java.util.function.Function;
 
 
 public abstract class TccTemplateService<R, O extends BizId> {
@@ -36,26 +35,44 @@ public abstract class TccTemplateService<R, O extends BizId> {
     }
 
     protected TccFailedLogIterator queryFailedLogs() {
-        Integer failedLogsTotal = tccLogService.getFailedLogsTotal();
+        Integer failedLogsTotal = tccLogService.getFailedLogsTotal(tccConfig.getFailedCheckTimes());
         Integer totalPage = failedLogsTotal / tccConfig.getTccFailedLogPageSize();
         return new TccFailedLogIterator(totalPage, pageNumber ->
-                tccLogService.queryFailedLogs(tccConfig.getFailedCheckCount(), tccConfig.getTccFailedLogPageSize(), pageNumber)
+                tccLogService.queryFailedLogs(tccConfig.getFailedCheckTimes(), tccConfig.getTccFailedLogPageSize(), pageNumber)
+        );
+    }
+
+    protected TccFailedLogIterator queryDeadLogs() {
+        Integer deadLogsTotal = tccLogService.getDeadLogsTotal(tccConfig.getFailedCheckTimes());
+        Integer totalPage = deadLogsTotal / tccConfig.getTccFailedLogPageSize();
+        return new TccFailedLogIterator(totalPage, pageNumber ->
+                tccLogService.queryDeadLogs(tccConfig.getFailedCheckTimes(), tccConfig.getTccFailedLogPageSize(), pageNumber)
         );
     }
 
     /**
-     * 执行事务状态检查，供上游业务系统调用
-     *
-     * @param callbackParameter 获取事务日志对应的业务关联信息，用于执行回调检查. 找不到对应事务日志关联的业务信息需要返回null.
+     * 执行一次死信日志检查
      */
-    protected void executeCheck(Function<Long, O> callbackParameter) {
+    protected void executeDeadCheck() {
+        TccFailedLogIterator iterator = queryDeadLogs();
+        check(iterator);
+    }
+
+    /**
+     * 执行事务状态检查，供上游业务系统调用
+     */
+    protected void executeFailedCheck() {
         TccFailedLogIterator iterator = queryFailedLogs();
+        check(iterator);
+    }
+
+    protected void check(TccFailedLogIterator iterator) {
         while (iterator.hasNext()) {
             List<TccLog> tccLogs = iterator.next();
             tccLogs.forEach(tccLog -> {
                 O object;
                 try {
-                    object = callbackParameter.apply(tccLog.getBizId());
+                    object = callbackParameter(tccLog.getBizId());
                 } catch (Exception e) {
                     log.error("获取日志关联业务信息失败, 业务类型: {}, 业务id : {}, ", bizType, tccLog.getBizId(), e);
                     return;
@@ -120,6 +137,14 @@ public abstract class TccTemplateService<R, O extends BizId> {
     }
 
     /**
+     * 检查tcc日志是否失败时，需要回调获取业务id对应的实体对象入参
+     *
+     * @param bizId 实体对象id（业务id）
+     * @return
+     */
+    protected abstract O callbackParameter(Long bizId);
+
+    /**
      * 业务逻辑错误，建议通过返回自定义异常 BusinessException,
      * <p>
      * 服务调用者可以比较好的应对较复杂的业务逻辑
@@ -160,7 +185,6 @@ public abstract class TccTemplateService<R, O extends BizId> {
      * @param object
      */
     protected void check(O object, TccLog tccLog) {
-
         if (tccLog.isCommited() || tccLog.isRollbacked()) {
             log.warn("对应的tcclog日志信息已回滚或已提交, 不执行提交状态检查,业务类型: {}, 业务id :{}", bizType, object.getBizId());
             return;

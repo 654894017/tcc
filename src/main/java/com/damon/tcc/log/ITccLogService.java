@@ -15,7 +15,12 @@ public interface ITccLogService {
 
     List<TccLog> queryFailedLogs(Integer checkedCount, Integer pageSize, Integer pageNumber);
 
-    Integer getFailedLogsTotal();
+    List<TccLog> queryDeadLogs(Integer checkedCount, Integer pageSize, Integer pageNumber);
+
+    Integer getFailedLogsTotal(Integer times);
+
+    Integer getDeadLogsTotal(Integer times);
+
 
     TccLog get(Long bizId);
 

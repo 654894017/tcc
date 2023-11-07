@@ -1,6 +1,6 @@
 package com.damon;
 
-public class TestRepository {
+public class TestGateway {
 
     public Test get(Long id) {
         return new Test(id);

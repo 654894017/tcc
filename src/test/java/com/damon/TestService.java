@@ -4,15 +4,19 @@ import com.damon.tcc.TccConfig;
 import com.damon.tcc.TccTemplateService;
 
 public class TestService extends TccTemplateService<Long, Test> {
-    private final TestRepository testRepository;
+    private final TestGateway testGateway;
 
-    public TestService(TccConfig config, TestRepository testRepository) {
+    public TestService(TccConfig config, TestGateway testGateway) {
         super(config);
-        this.testRepository = testRepository;
+        this.testGateway = testGateway;
     }
 
-    public void executeCheck() {
-        super.executeCheck(bizId -> testRepository.get(bizId));
+    public void executeFailedCheck() {
+        super.executeFailedCheck();
+    }
+
+    public void executeDeadCheck() {
+        super.executeDeadCheck();
     }
 
     public Long execute(Long id) {
@@ -24,6 +28,11 @@ public class TestService extends TccTemplateService<Long, Test> {
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
+    }
+
+    @Override
+    protected Test callbackParameter(Long bizId) {
+        return testGateway.get(bizId);
     }
 
     @Override
@@ -45,4 +54,5 @@ public class TestService extends TccTemplateService<Long, Test> {
     protected void cancelPhase(Test object) {
 
     }
+
 }

@@ -10,7 +10,7 @@ public class TccConfig {
     private Integer asyncThreadMinNumber;
     private Integer asyncThreadMaxNumber;
     private Integer queueSize;
-    private Integer failedCheckCount;
+    private Integer failedCheckTimes;
     private Integer tccFailedLogPageSize;
 
     public TccConfig(String bizType, ILocalTransactionService localTransactionService, ITccLogService tccLogService) {
@@ -21,19 +21,19 @@ public class TccConfig {
 
     public TccConfig(String bizType, ILocalTransactionService localTransactionService, ITccLogService tccLogService, Integer asyncThreadMinNumber,
                      Integer asyncThreadMaxNumber, Integer queueSize,
-                     Integer failedCheckCount, Integer tccFailedLogPageSize) {
+                     Integer failedCheckTimes, Integer tccFailedLogPageSize) {
         this.localTransactionService = localTransactionService;
         this.tccLogService = tccLogService;
         this.bizType = bizType;
         this.asyncThreadMinNumber = asyncThreadMinNumber;
         this.asyncThreadMaxNumber = asyncThreadMaxNumber;
         this.queueSize = queueSize;
-        this.failedCheckCount = failedCheckCount;
+        this.failedCheckTimes = failedCheckTimes;
         this.tccFailedLogPageSize = tccFailedLogPageSize;
     }
 
-    public Integer getFailedCheckCount() {
-        return failedCheckCount;
+    public Integer getFailedCheckTimes() {
+        return failedCheckTimes;
     }
 
     public Integer getTccFailedLogPageSize() {
