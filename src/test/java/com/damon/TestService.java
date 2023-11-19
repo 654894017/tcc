@@ -12,11 +12,11 @@ public class TestService extends TccTemplateService<Long, Test> {
     }
 
     public void executeFailedCheck() {
-        super.executeFailedCheck();
+        super.executeFailedLogCheck();
     }
 
     public void executeDeadCheck() {
-        super.executeDeadCheck();
+        super.executeDeadLogCheck();
     }
 
     public Long execute(Long id) {
@@ -42,12 +42,12 @@ public class TestService extends TccTemplateService<Long, Test> {
 
     @Override
     protected Long executeLocalTransactionPhase(Test object) {
+        // 执行本地事务
         return object.getBizId();
     }
 
     @Override
     protected void commitPhase(Test object) {
-
     }
 
     @Override

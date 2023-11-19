@@ -11,7 +11,7 @@ public interface ITccLogService {
 
     void rollback(TccLog tccLog);
 
-    void updateCheckCount(TccLog tccLog);
+    void updateCheckTimes(TccLog tccLog);
 
     List<TccLog> queryFailedLogs(Integer checkedCount, Integer pageSize, Integer pageNumber);
 
@@ -21,8 +21,6 @@ public interface ITccLogService {
 
     Integer getDeadLogsTotal(Integer times);
 
-
     TccLog get(Long bizId);
-
 
 }

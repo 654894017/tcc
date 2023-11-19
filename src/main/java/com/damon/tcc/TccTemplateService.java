@@ -53,7 +53,7 @@ public abstract class TccTemplateService<R, O extends BizId> {
     /**
      * 执行一次死信日志检查
      */
-    protected void executeDeadCheck() {
+    protected void executeDeadLogCheck() {
         TccFailedLogIterator iterator = queryDeadLogs();
         check(iterator);
     }
@@ -61,7 +61,7 @@ public abstract class TccTemplateService<R, O extends BizId> {
     /**
      * 执行事务状态检查，供上游业务系统调用
      */
-    protected void executeFailedCheck() {
+    protected void executeFailedLogCheck() {
         TccFailedLogIterator iterator = queryFailedLogs();
         check(iterator);
     }
@@ -201,7 +201,7 @@ public abstract class TccTemplateService<R, O extends BizId> {
             }
         } catch (Exception e) {
             log.error("业务类型: {}, 业务id :{}, 异步check失败", bizType, object.getBizId(), e);
-            tccLogService.updateCheckCount(tccLog);
+            tccLogService.updateCheckTimes(tccLog);
             ThreadUtil.safeSleep(2000);
         }
     }

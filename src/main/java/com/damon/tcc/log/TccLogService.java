@@ -53,7 +53,7 @@ public class TccLogService implements ITccLogService {
     }
 
     @Override
-    public void updateCheckCount(TccLog tccLog) {
+    public void updateCheckTimes(TccLog tccLog) {
         tccLog.check();
         int i = jdbcTemplate.update(
                 String.format(CHECK_TCC_LOG, bizType),
