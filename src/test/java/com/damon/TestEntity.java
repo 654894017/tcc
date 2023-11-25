@@ -2,10 +2,10 @@ package com.damon;
 
 import com.damon.tcc.BizId;
 
-public class Test implements BizId {
+public class TestEntity implements BizId {
     private Long id;
 
-    public Test(Long id) {
+    public TestEntity(Long id) {
         this.id = id;
     }
 

@@ -1,4 +1,4 @@
-CREATE TABLE `tcc_log` (
+CREATE TABLE `tcc_log_order` (
   `biz_id` bigint(20) NOT NULL COMMENT '业务id',
   `status` int(2) NOT NULL DEFAULT '0' COMMENT '状态: 1 创建事务成功 2  回滚成功  3 完成本地事务成功  4 提交事务成功',
   `version` int(11) NOT NULL DEFAULT '0' COMMENT '版本号',

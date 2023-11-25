@@ -9,8 +9,8 @@ import java.util.List;
 
 public class TccLogService implements ITccLogService {
     private final String INSETR_TCC_LOG = "insert into tcc_log_%s (biz_id, status, version, checked_times, last_update_time, create_time) values(?, ?, ?, ?, ?, ?)";
-    private final String UPDATE_TCC_LOG = "update tcc_log_%s set version = ? , status = ?, last_update_time = ? where biz_id = ? , version = ?";
-    private final String CHECK_TCC_LOG = "update tcc_log_%s set version = ? , last_update_time = ? , checked_times = ? where biz_id = ? , version = ?";
+    private final String UPDATE_TCC_LOG = "update tcc_log_%s set version = ? , status = ?, last_update_time = ? where biz_id = ? and version = ?";
+    private final String CHECK_TCC_LOG = "update tcc_log_%s set version = ? , last_update_time = ? , checked_times = ? where biz_id = ? and version = ?";
     private final String GET_TCC_LOG = "select * from tcc_log_%s where biz_id = ? ";
     private final String GET_TCC_FAILED_LOG_TOTAL = "select count(*) from tcc_log_%s where status in (1,3) and checked_times < ?";
     private final String GET_TCC_DEAD_LOG_TOTAL = "select count(*) from tcc_log_%s where status in (1,3) and checked_times > ?";
