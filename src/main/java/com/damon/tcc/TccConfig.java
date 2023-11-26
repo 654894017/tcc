@@ -7,27 +7,40 @@ public class TccConfig {
     private ILocalTransactionService localTransactionService;
     private ITccLogService tccLogService;
     private String bizType;
-    private Integer asyncThreadMinNumber;
-    private Integer asyncThreadMaxNumber;
-    private Integer queueSize;
+    private Integer asyncCommitThreadMinNumber;
+    private Integer asyncCommitThreadMaxNumber;
+    private Integer asyncCheckThreadMinNumber;
+    private Integer asyncCheckThreadMaxNumber;
+    private Integer asyncCommitQueueSize;
+    private Integer asyncCheckQueueSize;
     private Integer failedCheckTimes;
     private Integer tccFailedLogPageSize;
 
     public TccConfig(String bizType, ILocalTransactionService localTransactionService, ITccLogService tccLogService) {
         this(bizType, localTransactionService, tccLogService,
                 4, 8, 512,
+                4,8, 512,
                 5, 100);
     }
 
-    public TccConfig(String bizType, ILocalTransactionService localTransactionService, ITccLogService tccLogService, Integer asyncThreadMinNumber,
-                     Integer asyncThreadMaxNumber, Integer queueSize,
-                     Integer failedCheckTimes, Integer tccFailedLogPageSize) {
+    public TccConfig(String bizType, ILocalTransactionService localTransactionService, ITccLogService tccLogService,
+                     Integer asyncCommitThreadMinNumber,
+                     Integer asyncCommitThreadMaxNumber,
+                     Integer asyncCommitQueueSize,
+                     Integer asyncCheckThreadMinNumber,
+                     Integer asyncCheckThreadMaxNumber,
+                     Integer asyncCheckQueueSize,
+                     Integer failedCheckTimes,
+                     Integer tccFailedLogPageSize) {
         this.localTransactionService = localTransactionService;
         this.tccLogService = tccLogService;
         this.bizType = bizType;
-        this.asyncThreadMinNumber = asyncThreadMinNumber;
-        this.asyncThreadMaxNumber = asyncThreadMaxNumber;
-        this.queueSize = queueSize;
+        this.asyncCommitThreadMinNumber = asyncCommitThreadMinNumber;
+        this.asyncCommitThreadMaxNumber = asyncCommitThreadMaxNumber;
+        this.asyncCheckThreadMinNumber = asyncCheckThreadMinNumber;
+        this.asyncCheckThreadMaxNumber = asyncCheckThreadMaxNumber;
+        this.asyncCommitQueueSize = asyncCommitQueueSize;
+        this.asyncCheckQueueSize = asyncCheckQueueSize;
         this.failedCheckTimes = failedCheckTimes;
         this.tccFailedLogPageSize = tccFailedLogPageSize;
     }
@@ -52,15 +65,27 @@ public class TccConfig {
         return bizType;
     }
 
-    public Integer getAsyncThreadMinNumber() {
-        return asyncThreadMinNumber;
+    public Integer getAsyncCommitThreadMinNumber() {
+        return asyncCommitThreadMinNumber;
     }
 
-    public Integer getAsyncThreadMaxNumber() {
-        return asyncThreadMaxNumber;
+    public Integer getAsyncCommitThreadMaxNumber() {
+        return asyncCommitThreadMaxNumber;
     }
 
-    public Integer getQueueSize() {
-        return queueSize;
+    public Integer getAsyncCheckThreadMinNumber() {
+        return asyncCheckThreadMinNumber;
+    }
+
+    public Integer getAsyncCheckThreadMaxNumber() {
+        return asyncCheckThreadMaxNumber;
+    }
+
+    public Integer getAsyncCommitQueueSize() {
+        return asyncCommitQueueSize;
+    }
+
+    public Integer getAsyncCheckQueueSize() {
+        return asyncCheckQueueSize;
     }
 }

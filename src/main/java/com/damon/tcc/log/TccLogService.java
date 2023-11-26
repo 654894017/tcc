@@ -14,8 +14,8 @@ public class TccLogService implements ITccLogService {
     private final String GET_TCC_LOG = "select * from tcc_log_%s where biz_id = ? ";
     private final String GET_TCC_FAILED_LOG_TOTAL = "select count(*) from tcc_log_%s where status in (1,3) and checked_times < ?";
     private final String GET_TCC_DEAD_LOG_TOTAL = "select count(*) from tcc_log_%s where status in (1,3) and checked_times > ?";
-    private final String QUERY_FAILED_TCC_LOG = "select * from tcc_log_%s where status in (1,3) and checked_times < ? order by create_time limit ?, ?";
-    private final String QUERY_DEAD_TCC_LOG = "select * from tcc_log_%s where status in (1,3) and checked_times >= ? order by create_time limit ?, ?";
+    private final String QUERY_FAILED_TCC_LOG = "select * from tcc_log_%s where status in (1,3) and checked_times < ? order by create_time asc limit ?, ?";
+    private final String QUERY_DEAD_TCC_LOG = "select * from tcc_log_%s where status in (1,3) and checked_times >= ? order by create_time asc limit ?, ?";
     private final String bizType;
     private final JdbcTemplate jdbcTemplate;
 

@@ -17,7 +17,8 @@ import java.util.concurrent.TimeUnit;
 
 public abstract class TccTemplateService<R, O extends BizId> {
     private final Logger log = LoggerFactory.getLogger(TccTemplateService.class);
-    private final ExecutorService executorService;
+    private final ExecutorService asyncCommitExecutorService;
+    private final ExecutorService asyncCheckExecutorService;
     private final ITccLogService tccLogService;
     private final ILocalTransactionService localTransactionService;
     private final String bizType;
@@ -27,9 +28,13 @@ public abstract class TccTemplateService<R, O extends BizId> {
         this.tccLogService = config.getTccLogService();
         this.bizType = config.getBizType();
         this.localTransactionService = config.getLocalTransactionService();
-        this.executorService = new ThreadPoolExecutor(config.getAsyncThreadMinNumber(), config.getAsyncThreadMaxNumber(),
-                120L, TimeUnit.SECONDS, new LinkedBlockingQueue<>(config.getQueueSize()),
-                new NamedThreadFactory(config.getBizType() + "-tcc-aync-pool-", false), new ThreadPoolExecutor.CallerRunsPolicy()
+        this.asyncCommitExecutorService = new ThreadPoolExecutor(config.getAsyncCommitThreadMinNumber(), config.getAsyncCommitThreadMaxNumber(),
+                120L, TimeUnit.SECONDS, new LinkedBlockingQueue<>(config.getAsyncCommitQueueSize()),
+                new NamedThreadFactory(config.getBizType() + "-tcc-async-commit-pool-", false), new ThreadPoolExecutor.CallerRunsPolicy()
+        );
+        this.asyncCheckExecutorService = new ThreadPoolExecutor(config.getAsyncCheckThreadMinNumber(), config.getAsyncCheckThreadMaxNumber(),
+                120L, TimeUnit.SECONDS, new LinkedBlockingQueue<>(config.getAsyncCheckQueueSize()),
+                new NamedThreadFactory(config.getBizType() + "-tcc-async-check-pool-", false), new ThreadPoolExecutor.CallerRunsPolicy()
         );
         this.tccConfig = config;
     }
@@ -70,18 +75,26 @@ public abstract class TccTemplateService<R, O extends BizId> {
         while (iterator.hasNext()) {
             List<TccLog> tccLogs = iterator.next();
             tccLogs.forEach(tccLog -> {
-                O object;
-                try {
-                    object = callbackParameter(tccLog.getBizId());
-                } catch (Exception e) {
-                    log.error("获取日志关联业务信息失败, 业务类型: {}, 业务id : {}, ", bizType, tccLog.getBizId(), e);
-                    return;
-                }
-                if (object != null) {
-                    this.check(object, tccLog);
-                } else {
-                    log.error("无效的事务日志信息, 业务类型: {}, 业务id : {}, ", bizType, tccLog.getBizId());
-                }
+                asyncCheckExecutorService.execute(() -> {
+                    O object;
+                    try {
+                        object = callbackParameter(tccLog.getBizId());
+                    } catch (Exception e) {
+                        log.error("获取日志关联业务信息失败, 业务类型: {}, 业务id : {}, ", bizType, tccLog.getBizId(), e);
+                        return;
+                    }
+                    if (object != null) {
+                        try {
+                            this.check(object, tccLog);
+                        } catch (Exception e) {
+                            log.error("业务类型: {}, 业务id :{}, 异步check失败", bizType, object.getBizId(), e);
+                            tccLogService.updateCheckTimes(tccLog);
+                            ThreadUtil.safeSleep(2000);
+                        }
+                    } else {
+                        log.error("无效的事务日志信息, 业务类型: {}, 业务id : {}, ", bizType, tccLog.getBizId());
+                    }
+                });
             });
         }
     }
@@ -98,7 +111,7 @@ public abstract class TccTemplateService<R, O extends BizId> {
             tryPhase(object);
             log.info("业务类型: {}, 业务id : {}, 预执行成功", bizType, object.getBizId());
         } catch (Exception exception) {
-            executorService.submit(() -> {
+            asyncCommitExecutorService.submit(() -> {
                 try {
                     cancelPhase(object);
                     tccLogService.rollback(tccLog);
@@ -124,7 +137,7 @@ public abstract class TccTemplateService<R, O extends BizId> {
             throw exception;
         }
         log.info("业务类型: {}, 业务id : {}, commit本地事务成功", bizType, object.getBizId());
-        executorService.submit(() -> {
+        asyncCommitExecutorService.submit(() -> {
             try {
                 commitPhase(object);
                 tccLogService.commit(tccLog);
@@ -189,20 +202,15 @@ public abstract class TccTemplateService<R, O extends BizId> {
             log.warn("对应的tcclog日志信息已回滚或已提交, 不执行提交状态检查,业务类型: {}, 业务id :{}", bizType, object.getBizId());
             return;
         }
-        try {
-            if (tccLog.isLocalCommited()) {
-                commitPhase(object);
-                tccLogService.commit(tccLog);
-                log.info("业务类型: {}, 业务id :{}, 异步重试commit成功", bizType, object.getBizId());
-            } else {
-                cancelPhase(object);
-                tccLogService.rollback(tccLog);
-                log.info("业务类型: {}, 业务id :{}, 异步重试cancel成功", bizType, object.getBizId());
-            }
-        } catch (Exception e) {
-            log.error("业务类型: {}, 业务id :{}, 异步check失败", bizType, object.getBizId(), e);
-            tccLogService.updateCheckTimes(tccLog);
-            ThreadUtil.safeSleep(2000);
+
+        if (tccLog.isLocalCommited()) {
+            commitPhase(object);
+            tccLogService.commit(tccLog);
+            log.info("业务类型: {}, 业务id :{}, 异步重试commit成功", bizType, object.getBizId());
+        } else {
+            cancelPhase(object);
+            tccLogService.rollback(tccLog);
+            log.info("业务类型: {}, 业务id :{}, 异步重试cancel成功", bizType, object.getBizId());
         }
     }
 
