@@ -6,7 +6,7 @@ import java.util.function.Supplier;
 
 public class DefaultLocalTransactionService implements ILocalTransactionService {
     @Transactional(rollbackFor = Exception.class)
-    public <R> R executeLocalTransaction(Supplier<R> supplier) {
+    public <R> R execute(Supplier<R> supplier) {
         return supplier.get();
     }
 

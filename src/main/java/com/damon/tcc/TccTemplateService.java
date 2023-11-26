@@ -1,7 +1,6 @@
 package com.damon.tcc;
 
 import cn.hutool.core.thread.NamedThreadFactory;
-import cn.hutool.core.thread.ThreadUtil;
 import com.damon.tcc.log.ITccLogService;
 import com.damon.tcc.log.TccLog;
 import com.damon.tcc.transaction.ILocalTransactionService;
@@ -33,7 +32,7 @@ public abstract class TccTemplateService<R, O extends BizId> {
                 new NamedThreadFactory(config.getBizType() + "-tcc-async-commit-pool-", false), new ThreadPoolExecutor.CallerRunsPolicy()
         );
         this.asyncCheckExecutorService = new ThreadPoolExecutor(config.getAsyncCheckThreadMinNumber(), config.getAsyncCheckThreadMaxNumber(),
-                120L, TimeUnit.SECONDS, new LinkedBlockingQueue<>(config.getAsyncCheckQueueSize()),
+                60L, TimeUnit.SECONDS, new LinkedBlockingQueue<>(config.getAsyncCheckQueueSize()),
                 new NamedThreadFactory(config.getBizType() + "-tcc-async-check-pool-", false), new ThreadPoolExecutor.CallerRunsPolicy()
         );
         this.tccConfig = config;
@@ -75,26 +74,9 @@ public abstract class TccTemplateService<R, O extends BizId> {
         while (iterator.hasNext()) {
             List<TccLog> tccLogs = iterator.next();
             tccLogs.forEach(tccLog -> {
-                asyncCheckExecutorService.execute(() -> {
-                    O object;
-                    try {
-                        object = callbackParameter(tccLog.getBizId());
-                    } catch (Exception e) {
-                        log.error("获取日志关联业务信息失败, 业务类型: {}, 业务id : {}, ", bizType, tccLog.getBizId(), e);
-                        return;
-                    }
-                    if (object != null) {
-                        try {
-                            this.check(object, tccLog);
-                        } catch (Exception e) {
-                            log.error("业务类型: {}, 业务id :{}, 异步check失败", bizType, object.getBizId(), e);
-                            tccLogService.updateCheckTimes(tccLog);
-                            ThreadUtil.safeSleep(2000);
-                        }
-                    } else {
-                        log.error("无效的事务日志信息, 业务类型: {}, 业务id : {}, ", bizType, tccLog.getBizId());
-                    }
-                });
+                asyncCheckExecutorService.execute(
+                        new TccLogAsyncCheckRunnable<>(tccLogService, tccLog, bizType, this::callbackParameter, this::commitPhase, this::cancelPhase)
+                );
             });
         }
     }
@@ -111,41 +93,24 @@ public abstract class TccTemplateService<R, O extends BizId> {
             tryPhase(object);
             log.info("业务类型: {}, 业务id : {}, 预执行成功", bizType, object.getBizId());
         } catch (Exception exception) {
-            asyncCommitExecutorService.submit(() -> {
-                try {
-                    cancelPhase(object);
-                    tccLogService.rollback(tccLog);
-                    log.info("业务类型: {}, 业务id : {}, 异步cancel成功", bizType, object.getBizId());
-                } catch (Exception e) {
-                    log.error("业务类型: {}, 业务id : {}, 异步cancel失败", bizType, object.getBizId(), e);
-                }
-            });
+            asyncCommitExecutorService.submit(
+                    new TccLogAsyncCancelRunnable<>(tccLogService, tccLog, bizType, this::cancelPhase, object)
+            );
             throw exception;
         }
         R result;
         try {
-            result = localTransactionService.executeLocalTransaction(() -> {
-                tccLogService.commitLocal(tccLog);
-                return executeLocalTransactionPhase(object);
-            });
+            result = localTransactionService.execute(new TccLocalTransactionSupplier<>(tccLogService, tccLog, object, this::executeLocalTransactionPhase));
         } catch (Exception exception) {
-            try {
-                check(object);
-            } catch (Exception e) {
-                log.error("业务类型: {}, 业务id : {}, 执行回调检查失败", bizType, object.getBizId(), e);
-            }
+            asyncCheckExecutorService.execute(
+                    new TccLogAsyncCheckRunnable<>(tccLogService, tccLog, bizType, this::callbackParameter, this::commitPhase, this::cancelPhase)
+            );
             throw exception;
         }
-        log.info("业务类型: {}, 业务id : {}, commit本地事务成功", bizType, object.getBizId());
-        asyncCommitExecutorService.submit(() -> {
-            try {
-                commitPhase(object);
-                tccLogService.commit(tccLog);
-                log.info("业务类型: {}, 业务id : {}, 异步commit成功", bizType, object.getBizId());
-            } catch (Exception e) {
-                log.error("业务类型: {}, 业务id : {}, 异步commit失败", bizType, object.getBizId(), e);
-            }
-        });
+        log.info("业务类型: {}, 业务id : {}, 本地事务成功", bizType, object.getBizId());
+        asyncCommitExecutorService.execute(
+                new TccLogAsyncCommitRunnable<>(tccLogService, tccLog, bizType, this::commitPhase, object)
+        );
         return result;
     }
 
@@ -177,41 +142,5 @@ public abstract class TccTemplateService<R, O extends BizId> {
     protected abstract void commitPhase(O object);
 
     protected abstract void cancelPhase(O object);
-
-
-    protected void check(O object) {
-        TccLog tccLog = tccLogService.get(object.getBizId());
-        if (tccLog == null) {
-            log.warn("找不到对应的tcclog日志信息, 业务类型: {}, 业务id :{}", bizType, object.getBizId());
-            return;
-        }
-        check(object, tccLog);
-    }
-
-    /**
-     * 检查事务是否成功
-     * <p>
-     * 1.如果事务状态为：已完成本地事务，则执行commit行为
-     * <p>
-     * 2.如果事务状态为：创建事务状态，则执行cancel行为
-     *
-     * @param object
-     */
-    protected void check(O object, TccLog tccLog) {
-        if (tccLog.isCommited() || tccLog.isRollbacked()) {
-            log.warn("对应的tcclog日志信息已回滚或已提交, 不执行提交状态检查,业务类型: {}, 业务id :{}", bizType, object.getBizId());
-            return;
-        }
-
-        if (tccLog.isLocalCommited()) {
-            commitPhase(object);
-            tccLogService.commit(tccLog);
-            log.info("业务类型: {}, 业务id :{}, 异步重试commit成功", bizType, object.getBizId());
-        } else {
-            cancelPhase(object);
-            tccLogService.rollback(tccLog);
-            log.info("业务类型: {}, 业务id :{}, 异步重试cancel成功", bizType, object.getBizId());
-        }
-    }
 
 }
