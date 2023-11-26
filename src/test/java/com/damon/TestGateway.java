@@ -1,5 +1,6 @@
 package com.damon;
 
+import cn.hutool.core.util.IdUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
@@ -19,11 +20,11 @@ public class TestGateway {
     }
 
     public void save(){
-        jdbcTemplate.update("insert test2(id,number) values(1,2)");
-        if(1==1){
-            throw new RuntimeException("1");
-        }
-        jdbcTemplate.update("insert test2(id,number) values(2,2)");
+        jdbcTemplate.update("insert test2(id,number) values(?,?)", IdUtil.getSnowflakeNextId(),IdUtil.getSnowflakeNextId());
+//        if(1==1){
+//            throw new RuntimeException("1");
+//        }
+        jdbcTemplate.update("insert test2(id,number) values(?,?)",IdUtil.getSnowflakeNextId(), IdUtil.getSnowflakeNextId());
     }
 
 }

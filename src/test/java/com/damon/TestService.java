@@ -37,7 +37,7 @@ public class TestService extends TccTemplateService<Long, TestEntity> {
     public Long execute(Long id) {
         try {
             TestEntity testEntity = new TestEntity(id);
-            return super.process(testEntity);
+            return this.process(testEntity);
         } catch (TestException e) {
             throw new RuntimeException(e);
         } catch (Exception e) {
@@ -52,7 +52,6 @@ public class TestService extends TccTemplateService<Long, TestEntity> {
 
     @Override
     protected void tryPhase(TestEntity object) {
-      //  throw new TestException();
       //  throw new RuntimeException("tryPhase");
         System.out.println("tryPhase");
     }
@@ -71,7 +70,6 @@ public class TestService extends TccTemplateService<Long, TestEntity> {
 
     @Override
     protected void cancelPhase(TestEntity object) {
-
         System.out.println("cancelPhase");
     }
 

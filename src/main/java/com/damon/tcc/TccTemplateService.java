@@ -29,7 +29,7 @@ public abstract class TccTemplateService<R, O extends BizId> {
         this.localTransactionService = config.getLocalTransactionService();
         this.executorService = new ThreadPoolExecutor(config.getAsyncThreadMinNumber(), config.getAsyncThreadMaxNumber(),
                 120L, TimeUnit.SECONDS, new LinkedBlockingQueue<>(config.getQueueSize()),
-                new NamedThreadFactory("tcc-aync-pool-", false), new ThreadPoolExecutor.CallerRunsPolicy()
+                new NamedThreadFactory(config.getBizType() + "-tcc-aync-pool-", false), new ThreadPoolExecutor.CallerRunsPolicy()
         );
         this.tccConfig = config;
     }

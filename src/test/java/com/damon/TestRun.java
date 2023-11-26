@@ -1,5 +1,6 @@
 package com.damon;
 
+import cn.hutool.core.util.IdUtil;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,7 +15,13 @@ public class TestRun {
 
     @Test
     public void testAddPoints() {
-        testService.execute(1L);
+        Long start =System.currentTimeMillis();
+        for(int i=0;i< 10000;i++){
+            testService.execute(IdUtil.getSnowflakeNextId());
+
+        }
+        Long end = System.currentTimeMillis();
+        System.out.println(end-start);
     }
 
 }
