@@ -93,7 +93,7 @@ public abstract class TccTemplateService<R, O extends BizId> {
             tryPhase(object);
             log.info("业务类型: {}, 业务id : {}, 预执行成功", bizType, object.getBizId());
         } catch (Exception exception) {
-            asyncCommitExecutorService.submit(
+            asyncCheckExecutorService.submit(
                     new TccLogAsyncCancelRunnable<>(tccLogService, tccLog, bizType, this::cancelPhase, object)
             );
             throw exception;
@@ -102,6 +102,7 @@ public abstract class TccTemplateService<R, O extends BizId> {
         try {
             result = localTransactionService.execute(new TccLocalTransactionSupplier<>(tccLogService, tccLog, object, this::executeLocalTransactionPhase));
         } catch (Exception exception) {
+            log.error("业务类型: {}, 业务id : {}, 本地事务执行失败", bizType, object.getBizId(), exception);
             asyncCheckExecutorService.execute(
                     new TccLogAsyncCheckRunnable<>(tccLogService, tccLog, bizType, this::callbackParameter, this::commitPhase, this::cancelPhase)
             );

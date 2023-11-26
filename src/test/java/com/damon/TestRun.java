@@ -15,13 +15,13 @@ public class TestRun {
 
     @Test
     public void testAddPoints() {
-        Long start =System.currentTimeMillis();
-        for(int i=0;i< 10000;i++){
+        Long start = System.currentTimeMillis();
+        for (int i = 0; i < 10000; i++) {
             testService.execute(IdUtil.getSnowflakeNextId());
 
         }
         Long end = System.currentTimeMillis();
-        System.out.println(end-start);
+        System.out.println(end - start);
     }
 
 }

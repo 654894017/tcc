@@ -36,6 +36,7 @@ public class TccLogAsyncCheckRunnable<O extends BizId> implements Runnable {
             object = callbackParameterFunction.apply(tccLog.getBizId());
         } catch (Exception e) {
             log.error("获取日志关联业务信息失败, 业务类型: {}, 业务id : {}, ", bizType, tccLog.getBizId(), e);
+            ThreadUtil.safeSleep(1000);
             return;
         }
         if (object != null) {
@@ -44,10 +45,12 @@ public class TccLogAsyncCheckRunnable<O extends BizId> implements Runnable {
             } catch (Exception e) {
                 log.error("业务类型: {}, 业务id :{}, 异步check失败", bizType, object.getBizId(), e);
                 tccLogService.updateCheckTimes(tccLog);
-                ThreadUtil.safeSleep(2000);
+                ThreadUtil.safeSleep(1000);
             }
         } else {
-            log.error("无效的事务日志信息, 业务类型: {}, 业务id : {}, ", bizType, tccLog.getBizId());
+            //这个情况出现在try成功了，本地事务处理失败的情况下出现，可以忽略它
+            log.warn("无效的事务日志信息, 业务类型: {}, 业务id : {}, ", bizType, tccLog.getBizId());
+            tccLogService.updateCheckTimes(tccLog);
         }
     }
 
@@ -60,7 +63,7 @@ public class TccLogAsyncCheckRunnable<O extends BizId> implements Runnable {
      *
      * @param object
      */
-    protected void check(O object, TccLog tccLog) {
+    private void check(O object, TccLog tccLog) {
         if (tccLog.isCommited() || tccLog.isRollbacked()) {
             log.warn("对应的tcclog日志信息已回滚或已提交, 不执行提交状态检查,业务类型: {}, 业务id :{}", bizType, object.getBizId());
             return;

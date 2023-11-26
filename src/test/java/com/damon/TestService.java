@@ -52,7 +52,7 @@ public class TestService extends TccTemplateService<Long, TestEntity> {
 
     @Override
     protected void tryPhase(TestEntity object) {
-      //  throw new RuntimeException("tryPhase");
+        //  throw new RuntimeException("tryPhase");
         System.out.println("tryPhase");
     }
 

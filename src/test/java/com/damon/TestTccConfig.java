@@ -29,6 +29,7 @@ public class TestTccConfig {
     public TccConfig tccConfig(ILocalTransactionService localTransactionService, ITccLogService tccLogService) {
         return new TccConfig(bizType, localTransactionService, tccLogService);
     }
+
     @Bean
     public DataSource dataSource() {
         HikariDataSource dataSource = new HikariDataSource();

@@ -13,6 +13,8 @@ public interface ITccLogService {
 
     void updateCheckTimes(TccLog tccLog);
 
+    void updateDeadTimes(TccLog tccLog);
+
     List<TccLog> queryFailedLogs(Integer checkedCount, Integer pageSize, Integer pageNumber);
 
     List<TccLog> queryDeadLogs(Integer checkedCount, Integer pageSize, Integer pageNumber);
