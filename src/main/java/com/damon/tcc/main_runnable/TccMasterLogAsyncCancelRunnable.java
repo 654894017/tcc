@@ -1,0 +1,42 @@
+package com.damon.tcc.main_runnable;
+
+import com.damon.tcc.BizId;
+import com.damon.tcc.main_log.ITccMainLogService;
+import com.damon.tcc.main_log.TccMainLog;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.util.function.Consumer;
+
+public class TccMasterLogAsyncCancelRunnable<O extends BizId> implements Runnable {
+    private final Logger log = LoggerFactory.getLogger(TccMasterLogAsyncCancelRunnable.class);
+    private final ITccMainLogService tccLogService;
+    private final TccMainLog tccMainLog;
+    private final String bizType;
+    private final Consumer<O> cancelPhaseConsumer;
+    private final O object;
+
+    public TccMasterLogAsyncCancelRunnable(ITccMainLogService tccLogService,
+                                           TccMainLog tccMainLog,
+                                           String bizType,
+                                           Consumer<O> cancelPhaseConsumer,
+                                           O object) {
+        this.tccLogService = tccLogService;
+        this.tccMainLog = tccMainLog;
+        this.bizType = bizType;
+        this.cancelPhaseConsumer = cancelPhaseConsumer;
+        this.object = object;
+    }
+
+    @Override
+    public void run() {
+        try {
+            cancelPhaseConsumer.accept(object);
+            tccMainLog.rollback();
+            tccLogService.update(tccMainLog);
+            log.info("业务类型: {}, 业务id : {}, 异步cancel成功", bizType, object.getBizId());
+        } catch (Exception e) {
+            log.error("业务类型: {}, 业务id : {}, 异步cancel失败", bizType, object.getBizId(), e);
+        }
+    }
+}

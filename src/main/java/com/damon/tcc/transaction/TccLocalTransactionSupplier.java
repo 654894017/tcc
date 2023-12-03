@@ -1,28 +1,29 @@
 package com.damon.tcc.transaction;
 
 import com.damon.tcc.BizId;
-import com.damon.tcc.log.ITccLogService;
-import com.damon.tcc.log.TccLog;
+import com.damon.tcc.main_log.ITccMainLogService;
+import com.damon.tcc.main_log.TccMainLog;
 
 import java.util.function.Function;
 import java.util.function.Supplier;
 
 public class TccLocalTransactionSupplier<R, O extends BizId> implements Supplier<R> {
-    private final ITccLogService tccLogService;
-    private final TccLog tccLog;
+    private final ITccMainLogService tccLogService;
+    private final TccMainLog tccMainLog;
     private final Function<O, R> localTransactionPhaseFunction;
-    private final O object;
+    private final O parameter;
 
-    public TccLocalTransactionSupplier(ITccLogService tccLogService, TccLog tccLog, O object, Function<O, R> localTransactionPhaseFunction) {
-        this.tccLog = tccLog;
+    public TccLocalTransactionSupplier(ITccMainLogService tccLogService, TccMainLog tccMainLog, Function<O, R> localTransactionPhaseFunction, O parameter) {
+        this.tccMainLog = tccMainLog;
         this.tccLogService = tccLogService;
         this.localTransactionPhaseFunction = localTransactionPhaseFunction;
-        this.object = object;
+        this.parameter = parameter;
     }
 
     @Override
     public R get() {
-        tccLogService.commitLocal(tccLog);
-        return localTransactionPhaseFunction.apply(object);
+        tccMainLog.commitLocal();
+        tccLogService.update(tccMainLog);
+        return localTransactionPhaseFunction.apply(parameter);
     }
 }

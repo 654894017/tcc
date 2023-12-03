@@ -1,14 +1,14 @@
 package com.damon;
 
-import com.damon.tcc.TccConfig;
-import com.damon.tcc.TccTemplateService;
+import com.damon.tcc.TccMainConfig;
+import com.damon.tcc.TccMainTemplateService;
 import org.springframework.stereotype.Service;
 
 @Service
-public class TestService extends TccTemplateService<Long, TestEntity> {
+public class TestMainService extends TccMainTemplateService<Long, TestEntity> {
     private final TestGateway testGateway;
 
-    public TestService(TccConfig config, TestGateway testGateway) {
+    public TestMainService(TccMainConfig config, TestGateway testGateway) {
         super(config);
         this.testGateway = testGateway;
     }
@@ -52,7 +52,7 @@ public class TestService extends TccTemplateService<Long, TestEntity> {
 
     @Override
     protected void tryPhase(TestEntity object) {
-        //  throw new RuntimeException("tryPhase");
+        //throw new RuntimeException("tryPhase");
         System.out.println("tryPhase");
     }
 

@@ -1,33 +1,32 @@
 package com.damon;
 
-import com.damon.tcc.TccMainConfig;
-import com.damon.tcc.main_log.ITccMainLogService;
-import com.damon.tcc.main_log.TccMainLogService;
+import com.damon.tcc.TccSubConfig;
+import com.damon.tcc.sub_log.ITccSubLogService;
+import com.damon.tcc.sub_log.TccSubLogService;
 import com.damon.tcc.transaction.DefaultLocalTransactionService;
 import com.damon.tcc.transaction.ILocalTransactionService;
 import com.zaxxer.hikari.HikariDataSource;
 import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
 
 import javax.sql.DataSource;
 
-@Configuration
-public class TestTccConfig {
+//@Configuration
+public class TestTccSubConfig {
     private final String bizType = "order";
 
-    @Bean
+    // @Bean
     public ILocalTransactionService defaultLocalTransactionService() {
         return new DefaultLocalTransactionService();
     }
 
-    @Bean
-    public ITccMainLogService tccLogService(DataSource dataSource) {
-        return new TccMainLogService(dataSource, bizType);
+    ///@Bean
+    public ITccSubLogService tccLogService(DataSource dataSource) {
+        return new TccSubLogService(dataSource, bizType);
     }
 
-    @Bean
-    public TccMainConfig tccConfig(ILocalTransactionService localTransactionService, ITccMainLogService tccLogService) {
-        return new TccMainConfig(bizType, localTransactionService, tccLogService);
+    // @Bean
+    public TccSubConfig tccConfig(ILocalTransactionService localTransactionService, ITccSubLogService tccSubLogService) {
+        return new TccSubConfig(tccSubLogService, localTransactionService, bizType);
     }
 
     @Bean

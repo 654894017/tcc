@@ -10,8 +10,9 @@ import javax.sql.DataSource;
 @Service
 public class TestGateway {
     private final JdbcTemplate jdbcTemplate;
+
     @Autowired
-    public TestGateway(DataSource dataSource){
+    public TestGateway(DataSource dataSource) {
         this.jdbcTemplate = new JdbcTemplate(dataSource);
     }
 
@@ -19,12 +20,12 @@ public class TestGateway {
         return new TestEntity(id);
     }
 
-    public void save(){
-        jdbcTemplate.update("insert test2(id,number) values(?,?)", IdUtil.getSnowflakeNextId(),IdUtil.getSnowflakeNextId());
-//        if(1==1){
+    public void save() {
+        jdbcTemplate.update("insert test2(id,number) values(?,?)", IdUtil.getSnowflakeNextId(), IdUtil.getSnowflakeNextId());
+//        if (1 == 1) {
 //            throw new RuntimeException("1");
 //        }
-        jdbcTemplate.update("insert test2(id,number) values(?,?)",IdUtil.getSnowflakeNextId(), IdUtil.getSnowflakeNextId());
+        jdbcTemplate.update("insert test2(id,number) values(?,?)", IdUtil.getSnowflakeNextId(), IdUtil.getSnowflakeNextId());
     }
 
 }

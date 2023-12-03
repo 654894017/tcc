@@ -1,11 +1,11 @@
 package com.damon.tcc;
 
-import com.damon.tcc.log.ITccLogService;
+import com.damon.tcc.main_log.ITccMainLogService;
 import com.damon.tcc.transaction.ILocalTransactionService;
 
-public class TccConfig {
+public class TccMainConfig {
     private ILocalTransactionService localTransactionService;
-    private ITccLogService tccLogService;
+    private ITccMainLogService tccLogService;
     private String bizType;
     private Integer asyncCommitThreadMinNumber;
     private Integer asyncCommitThreadMaxNumber;
@@ -16,22 +16,22 @@ public class TccConfig {
     private Integer failedCheckTimes;
     private Integer tccFailedLogPageSize;
 
-    public TccConfig(String bizType, ILocalTransactionService localTransactionService, ITccLogService tccLogService) {
+    public TccMainConfig(String bizType, ILocalTransactionService localTransactionService, ITccMainLogService tccLogService) {
         this(bizType, localTransactionService, tccLogService,
                 4, 8, 512,
                 4, 8, 512,
                 5, 100);
     }
 
-    public TccConfig(String bizType, ILocalTransactionService localTransactionService, ITccLogService tccLogService,
-                     Integer asyncCommitThreadMinNumber,
-                     Integer asyncCommitThreadMaxNumber,
-                     Integer asyncCommitQueueSize,
-                     Integer asyncCheckThreadMinNumber,
-                     Integer asyncCheckThreadMaxNumber,
-                     Integer asyncCheckQueueSize,
-                     Integer failedCheckTimes,
-                     Integer tccFailedLogPageSize) {
+    public TccMainConfig(String bizType, ILocalTransactionService localTransactionService, ITccMainLogService tccLogService,
+                         Integer asyncCommitThreadMinNumber,
+                         Integer asyncCommitThreadMaxNumber,
+                         Integer asyncCommitQueueSize,
+                         Integer asyncCheckThreadMinNumber,
+                         Integer asyncCheckThreadMaxNumber,
+                         Integer asyncCheckQueueSize,
+                         Integer failedCheckTimes,
+                         Integer tccFailedLogPageSize) {
         this.localTransactionService = localTransactionService;
         this.tccLogService = tccLogService;
         this.bizType = bizType;
@@ -57,7 +57,7 @@ public class TccConfig {
         return localTransactionService;
     }
 
-    public ITccLogService getTccLogService() {
+    public ITccMainLogService getTccLogService() {
         return tccLogService;
     }
 

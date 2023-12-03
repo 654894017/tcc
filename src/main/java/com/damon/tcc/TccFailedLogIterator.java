@@ -1,6 +1,6 @@
 package com.damon.tcc;
 
-import com.damon.tcc.log.TccLog;
+import com.damon.tcc.main_log.TccMainLog;
 
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -9,10 +9,10 @@ import java.util.function.Function;
 
 public class TccFailedLogIterator implements Iterator {
     private final Integer totalPage;
-    private final Function<Integer, List<TccLog>> failedLogFunction;
+    private final Function<Integer, List<TccMainLog>> failedLogFunction;
     private Integer currentPage = 0;
 
-    public TccFailedLogIterator(Integer totalPage, Function<Integer, List<TccLog>> failedLogFunction) {
+    public TccFailedLogIterator(Integer totalPage, Function<Integer, List<TccMainLog>> failedLogFunction) {
         this.totalPage = totalPage;
         this.failedLogFunction = failedLogFunction;
     }
@@ -23,7 +23,7 @@ public class TccFailedLogIterator implements Iterator {
     }
 
     @Override
-    public List<TccLog> next() {
+    public List<TccMainLog> next() {
         if (currentPage > totalPage) {
             return new ArrayList<>(0);
         }
