@@ -7,7 +7,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.function.Function;
 
-public class TccFailedLogIterator implements Iterator {
+public class TccFailedLogIterator implements Iterator<List<TccMainLog>> {
     private final Integer totalPage;
     private final Function<Integer, List<TccMainLog>> failedLogFunction;
     private Integer currentPage = 0;

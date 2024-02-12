@@ -5,7 +5,7 @@ public class TccSubLog {
     private Long bizId;
     private Integer status;
     private int version;
-    // private int checkedTimes;
+
     private Long lastUpdateTime;
     private Long createTime;
 
@@ -13,7 +13,6 @@ public class TccSubLog {
         this.bizId = bizId;
         this.status = TccSubLogStatusEnum.TRY.getStatus();
         this.version = 0;
-        //  this.checkedTimes = 0;
         this.createTime = System.currentTimeMillis();
         this.lastUpdateTime = createTime;
     }
@@ -25,14 +24,12 @@ public class TccSubLog {
         this.status = TccSubLogStatusEnum.COMMITTED.getStatus();
         this.version = this.version + 1;
         this.lastUpdateTime = System.currentTimeMillis();
-        //this.checkedTimes = this.checkedTimes + 1;
     }
 
     public void cancel() {
         this.status = TccSubLogStatusEnum.CANCELED.getStatus();
         this.version = this.version + 1;
         this.lastUpdateTime = System.currentTimeMillis();
-        //this.checkedTimes = this.checkedTimes + 1;
     }
 
     public Boolean isCreated() {

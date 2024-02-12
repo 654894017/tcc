@@ -1,7 +1,7 @@
 package com.damon.tcc.sub_handler;
 
 import com.damon.tcc.BizId;
-import com.damon.tcc.exception.OptimisticLockException;
+import com.damon.tcc.exception.TccSubLogInvalidException;
 import com.damon.tcc.sub_log.ITccSubLogService;
 import com.damon.tcc.sub_log.TccSubLog;
 import org.slf4j.Logger;
@@ -22,12 +22,19 @@ public class TccSubLogCommitHandler<P extends BizId> {
     }
 
     public void execute(P parameter) {
-        TccSubLog tccSubLog = tccSubLogService.get(parameter.getBizId());
-        tccSubLog.commit();
-        try{
+        try {
+            TccSubLog tccSubLog = tccSubLogService.get(parameter.getBizId());
+            if (tccSubLog == null) {
+                String errorMessage = "找不到对应的业务类型:%s, 业务id: %s, 关联的子事务日志 ";
+                throw new TccSubLogInvalidException(String.format(errorMessage, bizType, parameter.getBizId()));
+            }
+            if (tccSubLog.isCommited()) {
+                return;
+            }
+            tccSubLog.commit();
             tccSubLogService.update(tccSubLog);
             commitPhaseConsumer.accept(parameter);
-        } catch (OptimisticLockException e) {
+        } catch (Exception e) {
             log.error("子事务业务类型: {}, 业务id : {}, commit失败", bizType, parameter.getBizId(), e);
             throw e;
         }

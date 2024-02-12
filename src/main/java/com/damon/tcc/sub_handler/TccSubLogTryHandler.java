@@ -5,7 +5,6 @@ import com.damon.tcc.sub_log.ITccSubLogService;
 import com.damon.tcc.sub_log.TccSubLog;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.dao.DuplicateKeyException;
 
 import java.util.function.Function;
 
@@ -23,10 +22,10 @@ public class TccSubLogTryHandler<R, P extends BizId> {
 
     public R execute(P parameter) {
         TccSubLog tccSubLog = new TccSubLog(parameter.getBizId());
-        try{
+        try {
             tccSubLogService.create(tccSubLog);
             return tryPhaseFunction.apply(parameter);
-        }catch (DuplicateKeyException e){
+        } catch (Exception e) {
             log.error("子事务业务类型: {}, 业务id : {}, try失败", bizType, parameter.getBizId(), e);
             throw e;
         }

@@ -9,8 +9,7 @@ import java.util.List;
 
 public class TccMainLogService implements ITccMainLogService {
     private final String INSETR_TCC_LOG = "insert into tcc_main_log_%s (biz_id, status, version, checked_times, last_update_time, create_time) values(?, ?, ?, ?, ?, ?)";
-    private final String UPDATE_TCC_LOG = "update tcc_main_log_%s set version = ? , status = ?, last_update_time = ? where biz_id = ? and version = ?";
-    private final String CHECK_TCC_LOG = "update tcc_main_log_%s set version = ? , last_update_time = ? , checked_times = ? where biz_id = ? and version = ?";
+    private final String UPDATE_TCC_LOG = "update tcc_main_log_%s set version = ? , status = ?, last_update_time = ?, checked_times = ? where biz_id = ? and version = ?";
     private final String GET_TCC_LOG = "select * from tcc_main_log_%s where biz_id = ? ";
     private final String GET_TCC_FAILED_LOG_TOTAL = "select count(*) from tcc_main_log_%s where status in (1,3) and checked_times < ?";
     private final String GET_TCC_DEAD_LOG_TOTAL = "select count(*) from tcc_main_log_%s where status in (1,3) and checked_times > ?";
@@ -24,18 +23,6 @@ public class TccMainLogService implements ITccMainLogService {
         this.bizType = bizType;
     }
 
-    //    @Override
-//    public void commit(TccMainLog tccMainLog) {
-//        tccMainLog.commit();
-//        update(tccMainLog);
-//    }
-//
-//    @Override
-//    public void commitLocal(TccMainLog tccMainLog) {
-//        tccMainLog.commitLocal();
-//        update(tccMainLog);
-//    }
-//
     @Override
     public void create(TccMainLog tccMainLog) {
         int i = jdbcTemplate.update(
@@ -46,29 +33,12 @@ public class TccMainLogService implements ITccMainLogService {
         }
     }
 
-    //
-//    @Override
-//    public void rollback(TccMainLog tccMainLog) {
-//        tccMainLog.rollback();
-//        updateStatus(tccMainLog);
-//    }
-//
-//    @Override
-//    public void updateCheckTimes(TccMainLog tccMainLog) {
-//        tccMainLog.check();
-//        int i = jdbcTemplate.update(
-//                String.format(CHECK_TCC_LOG, bizType),
-//                tccMainLog.getVersion(), tccMainLog.getLastUpdateTime(), tccMainLog.getCheckedTimes(), tccMainLog.getBizId(), tccMainLog.getVersion() -1
-//        );
-//        if (i != 1) {
-//            throw new OptimisticLockException("update tcc main_log failed");
-//        }
-//    }
     @Override
     public void update(TccMainLog tccMainLog) {
         int i = jdbcTemplate.update(
                 String.format(UPDATE_TCC_LOG, bizType),
-                tccMainLog.getVersion(), tccMainLog.getStatus(), tccMainLog.getLastUpdateTime(), tccMainLog.getBizId(), tccMainLog.getVersion() - 1
+                tccMainLog.getVersion(), tccMainLog.getStatus(), tccMainLog.getLastUpdateTime(), tccMainLog.getCheckedTimes(),
+                tccMainLog.getBizId(), tccMainLog.getVersion() - 1
         );
         if (i != 1) {
             throw new OptimisticLockException("update tcc main_log failed, log info : " + tccMainLog);
@@ -106,11 +76,16 @@ public class TccMainLogService implements ITccMainLogService {
     }
 
     @Override
+    public List<TccMainLog> query(List<Long> bizIds) {
+        return jdbcTemplate.query(String.format(GET_TCC_LOG, bizType),
+                new BeanPropertyRowMapper<>(TccMainLog.class), bizIds
+        );
+    }
+
+    @Override
     public TccMainLog get(Long bizId) {
-        TccMainLog tccMainLog = jdbcTemplate.queryForObject(
-                String.format(GET_TCC_LOG, bizType),
+        return jdbcTemplate.queryForObject(String.format(GET_TCC_LOG, bizType),
                 new BeanPropertyRowMapper<>(TccMainLog.class), bizId
         );
-        return tccMainLog;
     }
 }

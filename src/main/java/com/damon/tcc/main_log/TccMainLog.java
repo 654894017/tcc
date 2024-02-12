@@ -1,10 +1,6 @@
 package com.damon.tcc.main_log;
 
-
-import com.damon.tcc.event_source.Source;
-import com.damon.tcc.main_log.event.*;
-
-public class TccMainLog extends Source {
+public class TccMainLog {
     private Long bizId;
     private Integer status;
     private int version;
@@ -13,68 +9,40 @@ public class TccMainLog extends Source {
     private Long createTime;
 
     public TccMainLog(Long bizId) {
-        Long creatTime = System.currentTimeMillis();
-        this.applyNewEvent(new TccMainLogCreatedEvent(
-                bizId, TccMainLogStatusEnum.CREATED.getStatus(), 0, 0, creatTime, creatTime)
-        );
+        Long createTime = System.currentTimeMillis();
+        this.checkedTimes = 0;
+        this.version = 0;
+        this.status = TccMainLogStatusEnum.CREATED.getStatus();
+        this.createTime = createTime;
+        this.lastUpdateTime = createTime;
+        this.bizId = bizId;
     }
 
     public TccMainLog() {
     }
 
     public void rollback() {
-        applyNewEvent(new TccMainLogCommittedEvent(TccMainLogStatusEnum.ROOBACKED.getStatus(), version + 1, System.currentTimeMillis()));
+        this.version = this.version + 1;
+        this.status = TccMainLogStatusEnum.ROOBACKED.getStatus();
+        this.lastUpdateTime = System.currentTimeMillis();
     }
 
     public void commit() {
-        applyNewEvent(new TccMainLogCommittedEvent(
-                TccMainLogStatusEnum.COMMITED.getStatus(), version + 1, System.currentTimeMillis()
-        ));
+        this.version = this.version + 1;
+        this.status = TccMainLogStatusEnum.COMMITED.getStatus();
+        this.lastUpdateTime = System.currentTimeMillis();
     }
 
     public void commitLocal() {
-        applyNewEvent(new TccMainLogCommittedEvent(
-                TccMainLogStatusEnum.LOCAL_COMMITED.getStatus(), version + 1, System.currentTimeMillis()
-        ));
+        this.version = this.version + 1;
+        this.status = TccMainLogStatusEnum.LOCAL_COMMITED.getStatus();
+        this.lastUpdateTime = System.currentTimeMillis();
     }
 
     public void check() {
-        applyNewEvent(new TccMainLogCheckedEvent(
-                version + 1, checkedTimes + 1, System.currentTimeMillis()
-        ));
-    }
-
-    private void apply(TccMainLogCheckedEvent event) {
-        this.lastUpdateTime = event.getLastUpdateTime();
-        this.checkedTimes = event.getCheckedTimes();
-        this.version = event.getVersion();
-    }
-
-    private void apply(TccMainLogCreatedEvent event) {
-        this.bizId = event.getBizId();
-        this.status = event.getStatus();
-        this.version = event.getVersion();
-        this.checkedTimes = event.getCheckedTimes();
-        this.createTime = event.getCreateTime();
-        this.lastUpdateTime = event.getLastUpdateTime();
-    }
-
-    private void apply(TccMainLogLocalCommittedEvent event) {
-        this.status = event.getStatus();
-        this.lastUpdateTime = event.getLastUpdateTime();
-        this.version = event.getVersion();
-    }
-
-    private void apply(TccMainLogCommittedEvent event) {
-        this.status = event.getStatus();
-        this.lastUpdateTime = event.getLastUpdateTime();
-        this.version = event.getVersion();
-    }
-
-    private void apply(TccMainLogRollbackedEvent event) {
-        this.status = event.getStatus();
-        this.lastUpdateTime = event.getLastUpdateTime();
-        this.version = event.getVersion();
+        this.version = this.version + 1;
+        this.checkedTimes = this.checkedTimes + 1;
+        this.lastUpdateTime = System.currentTimeMillis();
     }
 
     public boolean isCreated() {
@@ -111,6 +79,10 @@ public class TccMainLog extends Source {
 
     public Integer getVersion() {
         return version;
+    }
+
+    public void setVersion(Integer version) {
+        this.version = version;
     }
 
     public void setVersion(int version) {

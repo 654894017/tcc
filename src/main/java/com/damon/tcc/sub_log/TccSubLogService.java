@@ -7,9 +7,10 @@ import org.springframework.jdbc.core.BeanPropertyRowMapper;
 import org.springframework.jdbc.core.JdbcTemplate;
 
 import javax.sql.DataSource;
+import java.util.List;
 
 public class TccSubLogService implements ITccSubLogService {
-    private final String INSETR_TCC_SUB_LOG = "insert into tcc_sub_log_%s (biz_id, status, last_update_time, create_time, version) values(?, ?, ?, ?, ?, ?)";
+    private final String INSETR_TCC_SUB_LOG = "insert into tcc_sub_log_%s (biz_id, status, last_update_time, create_time, version) values(?, ?, ?, ?, ?)";
     private final String UPDATE_TCC_SUB_LOG = "update tcc_sub_log_%s set status = ?, last_update_time = ?, version = ? where biz_id = ? and version = ?";
     private final String GET_TCC_SUB_LOG = "select * from tcc_sub_log_%s where biz_id = ?";
     private final String bizType;
@@ -47,11 +48,11 @@ public class TccSubLogService implements ITccSubLogService {
 
     @Override
     public TccSubLog get(Long bizId) {
-        TccSubLog tccSubLog = jdbcTemplate.queryForObject(
+        List<TccSubLog> tccSubLogs = jdbcTemplate.query(
                 String.format(GET_TCC_SUB_LOG, bizType),
                 new BeanPropertyRowMapper<>(TccSubLog.class), bizId
         );
-        return tccSubLog;
+        return tccSubLogs.isEmpty() ? null : tccSubLogs.get(0);
     }
 
 }

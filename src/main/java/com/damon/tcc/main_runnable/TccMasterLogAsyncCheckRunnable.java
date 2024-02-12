@@ -1,7 +1,7 @@
 package com.damon.tcc.main_runnable;
 
-import cn.hutool.core.thread.ThreadUtil;
 import com.damon.tcc.BizId;
+import com.damon.tcc.exception.BizIdInvalidException;
 import com.damon.tcc.main_log.ITccMainLogService;
 import com.damon.tcc.main_log.TccMainLog;
 import org.slf4j.Logger;
@@ -12,59 +12,66 @@ import java.util.function.Function;
 
 public class TccMasterLogAsyncCheckRunnable<O extends BizId> implements Runnable {
     private final Logger log = LoggerFactory.getLogger(TccMasterLogAsyncCheckRunnable.class);
-    private final ITccMainLogService tccLogService;
-    private final TccMainLog tccMainLog;
-    private final String bizType;
-    private final Function<Long, O> callbackParameterFunction;
-    private final Consumer<O> commitPhaseConsumer;
-    private final Consumer<O> cancelPhaseConsumer;
+    private Function<Long, O> callbackParameterFunction;
+    private ITccMainLogService tccLogService;
+    private String bizType;
+    private Consumer<O> commitPhaseConsumer;
+    private Consumer<O> cancelPhaseConsumer;
+    private TccMainLog tccMainLog;
     private O parameter;
 
-    public TccMasterLogAsyncCheckRunnable(ITccMainLogService tccLogService, TccMainLog tccMainLog, String bizType,
-                                          Function<Long, O> callbackParameterFunction,
-                                          Consumer<O> commitPhaseConsumer, Consumer<O> cancelPhaseConsumer) {
-        this(tccLogService, tccMainLog, bizType, callbackParameterFunction, commitPhaseConsumer, cancelPhaseConsumer, null);
-    }
-
-    public TccMasterLogAsyncCheckRunnable(ITccMainLogService tccLogService, TccMainLog tccMainLog, String bizType,
-                                          Function<Long, O> callbackParameterFunction,
-                                          Consumer<O> commitPhaseConsumer, Consumer<O> cancelPhaseConsumer, O parameter) {
+    public TccMasterLogAsyncCheckRunnable(ITccMainLogService tccLogService, String bizType,
+                                          Consumer<O> commitPhaseConsumer,
+                                          Consumer<O> cancelPhaseConsumer,
+                                          O parameter) {
         this.tccLogService = tccLogService;
-        this.tccMainLog = tccMainLog;
         this.bizType = bizType;
-        this.callbackParameterFunction = callbackParameterFunction;
         this.commitPhaseConsumer = commitPhaseConsumer;
         this.cancelPhaseConsumer = cancelPhaseConsumer;
         this.parameter = parameter;
     }
 
+    public TccMasterLogAsyncCheckRunnable(ITccMainLogService tccLogService, String bizType,
+                                          Consumer<O> commitPhaseConsumer,
+                                          Consumer<O> cancelPhaseConsumer,
+                                          Function<Long, O> callbackParameterFunction,
+                                          TccMainLog tccMainLog
+    ) {
+        this.callbackParameterFunction = callbackParameterFunction;
+        this.tccLogService = tccLogService;
+        this.bizType = bizType;
+        this.commitPhaseConsumer = commitPhaseConsumer;
+        this.cancelPhaseConsumer = cancelPhaseConsumer;
+        this.tccMainLog = tccMainLog;
+    }
 
     @Override
     public void run() {
-        if (parameter == null) {
-            try {
+        try {
+            if (parameter == null) {
                 parameter = callbackParameterFunction.apply(tccMainLog.getBizId());
-            } catch (Exception e) {
-                log.error("获取日志关联业务信息失败, 业务类型: {}, 业务id : {}, ", bizType, tccMainLog.getBizId(), e);
-                ThreadUtil.safeSleep(1000);
+                if (parameter == null) {
+                    throw new BizIdInvalidException("无效的业务id: " + tccMainLog.getBizId());
+                }
+            }
+            tccMainLog = tccLogService.get(parameter.getBizId());
+            if (tccMainLog == null) {
+                throw new BizIdInvalidException("无效的业务id: " + parameter.getBizId());
+            }
+            this.check(parameter, tccMainLog);
+        } catch (Exception e) {
+            log.error("业务类型: {}, 业务id :{}, 异步check失败", bizType, parameter.getBizId(), e);
+            TccMainLog mainLog = tccLogService.get(tccMainLog.getBizId());
+            if (mainLog == null) {
                 return;
             }
-        }
-        if (parameter != null) {
+            mainLog.check();
             try {
-                this.check(parameter, tccMainLog);
-            } catch (Exception e) {
-                log.error("业务类型: {}, 业务id :{}, 异步check失败", bizType, parameter.getBizId(), e);
-                tccMainLog.resetLastVersion();
-                tccMainLog.check();
-                tccLogService.update(tccMainLog);
-                ThreadUtil.safeSleep(1000);
+                tccLogService.update(mainLog);
+            } catch (Exception exception) {
+                log.error("业务类型: {}, 业务id :{}, 更新日志重试次数失败", bizType, parameter.getBizId(), e);
             }
-        } else {
-            //这个情况出现在try成功了，本地事务处理失败的情况下出现，可以忽略它
-            log.warn("无效的事务日志信息, 业务类型: {}, 业务id : {}, ", bizType, tccMainLog.getBizId());
-            tccMainLog.check();
-            tccLogService.update(tccMainLog);
+            ;
         }
     }
 

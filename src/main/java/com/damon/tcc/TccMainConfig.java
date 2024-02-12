@@ -1,7 +1,10 @@
 package com.damon.tcc;
 
 import com.damon.tcc.main_log.ITccMainLogService;
+import com.damon.tcc.main_log.TccMainLogService;
 import com.damon.tcc.transaction.ILocalTransactionService;
+
+import javax.sql.DataSource;
 
 public class TccMainConfig {
     private ILocalTransactionService localTransactionService;
@@ -15,15 +18,16 @@ public class TccMainConfig {
     private Integer asyncCheckQueueSize;
     private Integer failedCheckTimes;
     private Integer tccFailedLogPageSize;
+    private DataSource dataSource;
 
-    public TccMainConfig(String bizType, ILocalTransactionService localTransactionService, ITccMainLogService tccLogService) {
-        this(bizType, localTransactionService, tccLogService,
+    public TccMainConfig(String bizType, ILocalTransactionService localTransactionService, DataSource dataSource) {
+        this(bizType, localTransactionService, dataSource,
                 4, 8, 512,
                 4, 8, 512,
                 5, 100);
     }
 
-    public TccMainConfig(String bizType, ILocalTransactionService localTransactionService, ITccMainLogService tccLogService,
+    public TccMainConfig(String bizType, ILocalTransactionService localTransactionService, DataSource dataSource,
                          Integer asyncCommitThreadMinNumber,
                          Integer asyncCommitThreadMaxNumber,
                          Integer asyncCommitQueueSize,
@@ -33,7 +37,7 @@ public class TccMainConfig {
                          Integer failedCheckTimes,
                          Integer tccFailedLogPageSize) {
         this.localTransactionService = localTransactionService;
-        this.tccLogService = tccLogService;
+        this.tccLogService = new TccMainLogService(dataSource, bizType);
         this.bizType = bizType;
         this.asyncCommitThreadMinNumber = asyncCommitThreadMinNumber;
         this.asyncCommitThreadMaxNumber = asyncCommitThreadMaxNumber;
@@ -43,6 +47,7 @@ public class TccMainConfig {
         this.asyncCheckQueueSize = asyncCheckQueueSize;
         this.failedCheckTimes = failedCheckTimes;
         this.tccFailedLogPageSize = tccFailedLogPageSize;
+        this.dataSource = dataSource;
     }
 
     public Integer getFailedCheckTimes() {
@@ -87,5 +92,9 @@ public class TccMainConfig {
 
     public Integer getAsyncCheckQueueSize() {
         return asyncCheckQueueSize;
+    }
+
+    public DataSource getDataSource() {
+        return dataSource;
     }
 }

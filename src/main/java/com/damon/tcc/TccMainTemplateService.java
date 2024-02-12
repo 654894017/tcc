@@ -25,6 +25,7 @@ public abstract class TccMainTemplateService<R, O extends BizId> {
     private final ILocalTransactionService localTransactionService;
     private final String bizType;
     private final TccMainConfig tccMainConfig;
+
     public TccMainTemplateService(TccMainConfig config) {
         this.tccLogService = config.getTccLogService();
         this.bizType = config.getBizType();
@@ -39,20 +40,33 @@ public abstract class TccMainTemplateService<R, O extends BizId> {
         );
         this.tccMainConfig = config;
     }
+
     protected TccFailedLogIterator queryFailedLogs() {
         Integer failedLogsTotal = tccLogService.getFailedLogsTotal(tccMainConfig.getFailedCheckTimes());
-        Integer totalPage = failedLogsTotal / tccMainConfig.getTccFailedLogPageSize();
+        Integer totalPage;
+        if (failedLogsTotal <= tccMainConfig.getTccFailedLogPageSize() && failedLogsTotal > 0) {
+            totalPage = 1;
+        } else {
+            totalPage = failedLogsTotal / tccMainConfig.getTccFailedLogPageSize() + 1;
+        }
         return new TccFailedLogIterator(totalPage, pageNumber ->
                 tccLogService.queryFailedLogs(tccMainConfig.getFailedCheckTimes(), tccMainConfig.getTccFailedLogPageSize(), pageNumber)
         );
     }
+
     protected TccFailedLogIterator queryDeadLogs() {
         Integer deadLogsTotal = tccLogService.getDeadLogsTotal(tccMainConfig.getFailedCheckTimes());
-        Integer totalPage = deadLogsTotal / tccMainConfig.getTccFailedLogPageSize();
+        Integer totalPage;
+        if (deadLogsTotal <= tccMainConfig.getTccFailedLogPageSize() && deadLogsTotal > 0) {
+            totalPage = 1;
+        } else {
+            totalPage = deadLogsTotal / tccMainConfig.getTccFailedLogPageSize() + 1;
+        }
         return new TccFailedLogIterator(totalPage, pageNumber ->
                 tccLogService.queryDeadLogs(tccMainConfig.getFailedCheckTimes(), tccMainConfig.getTccFailedLogPageSize(), pageNumber)
         );
     }
+
     /**
      * 执行一次死信日志检查
      */
@@ -60,6 +74,7 @@ public abstract class TccMainTemplateService<R, O extends BizId> {
         TccFailedLogIterator iterator = queryDeadLogs();
         check(iterator);
     }
+
     /**
      * 执行事务状态检查，供上游业务系统调用
      */
@@ -67,17 +82,20 @@ public abstract class TccMainTemplateService<R, O extends BizId> {
         TccFailedLogIterator iterator = queryFailedLogs();
         check(iterator);
     }
+
     protected void check(TccFailedLogIterator iterator) {
         while (iterator.hasNext()) {
             List<TccMainLog> tccMainLogs = iterator.next();
             tccMainLogs.forEach(tccLog -> {
                 asyncCheckExecutorService.execute(
-                        new TccMasterLogAsyncCheckRunnable<>(tccLogService, tccLog, bizType,
-                                this::callbackParameter, this::commitPhase, this::cancelPhase)
+                        new TccMasterLogAsyncCheckRunnable<>(tccLogService, bizType, this::commitPhase,
+                                this::cancelPhase, this::callbackParameter, tccLog
+                        )
                 );
             });
         }
     }
+
     /**
      * @param parameter
      * @return
@@ -86,37 +104,46 @@ public abstract class TccMainTemplateService<R, O extends BizId> {
         TccMainLog tccMainLog = new TccMainLog(parameter.getBizId());
         tccLogService.create(tccMainLog);
         log.info("业务类型: {}, 业务id : {}, 创建事务日志成功", bizType, parameter.getBizId());
+        this.executeTry(parameter);
+        log.info("业务类型: {}, 业务id : {}, 预执行成功", bizType, parameter.getBizId());
+        R result = this.executeLocalTransaction(parameter, tccMainLog);
+        log.info("业务类型: {}, 业务id : {}, 本地事务成功", bizType, parameter.getBizId());
+        this.executeCommit(parameter, tccMainLog);
+        return result;
+    }
+
+    private void executeTry(O parameter) {
         try {
             tryPhase(parameter);
-            log.info("业务类型: {}, 业务id : {}, 预执行成功", bizType, parameter.getBizId());
         } catch (Exception exception) {
             asyncCommitExecutorService.execute(
-                    new TccMasterLogAsyncCheckRunnable<>(tccLogService, tccMainLog, bizType,
-                            this::callbackParameter, this::commitPhase, this::cancelPhase, parameter)
+                    new TccMasterLogAsyncCheckRunnable<>(tccLogService, bizType, this::commitPhase, this::cancelPhase, parameter)
             );
             log.error("业务类型: {}, 业务id : {}, 预执行失败", bizType, parameter.getBizId(), exception);
             throw exception;
         }
-        R result;
+    }
+
+    private void executeCommit(O parameter, TccMainLog tccMainLog) {
+        asyncCommitExecutorService.execute(
+                new TccMasterLogAsyncCommitRunnable<>(tccLogService, tccMainLog, bizType, this::commitPhase, parameter)
+        );
+    }
+
+    private R executeLocalTransaction(O parameter, TccMainLog tccMainLog) {
         try {
-            result = localTransactionService.execute(
+            return localTransactionService.execute(
                     new TccLocalTransactionSupplier<>(tccLogService, tccMainLog, this::executeLocalTransactionPhase, parameter)
             );
         } catch (Exception exception) {
             log.error("业务类型: {}, 业务id : {}, 本地事务执行失败", bizType, parameter.getBizId(), exception);
-            tccMainLog.resetLastVersion();
             asyncCommitExecutorService.execute(
-                    new TccMasterLogAsyncCheckRunnable<>(tccLogService, tccMainLog, bizType,
-                            this::callbackParameter, this::commitPhase, this::cancelPhase, parameter)
+                    new TccMasterLogAsyncCheckRunnable<>(tccLogService, bizType, this::commitPhase, this::cancelPhase, parameter)
             );
             throw exception;
         }
-        log.info("业务类型: {}, 业务id : {}, 本地事务成功", bizType, parameter.getBizId());
-        asyncCommitExecutorService.execute(
-                new TccMasterLogAsyncCommitRunnable<>(tccLogService, tccMainLog, bizType, this::commitPhase, parameter)
-        );
-        return result;
     }
+
     /**
      * 检查tcc日志是否失败时，需要回调获取业务id对应的实体对象入参
      *
@@ -124,6 +151,7 @@ public abstract class TccMainTemplateService<R, O extends BizId> {
      * @return
      */
     protected abstract O callbackParameter(Long bizId);
+
     /**
      * 业务逻辑错误，建议通过返回自定义异常 BusinessException,
      * <p>
@@ -132,6 +160,7 @@ public abstract class TccMainTemplateService<R, O extends BizId> {
      * @param object
      */
     protected abstract void tryPhase(O object);
+
     /**
      * 执行本地事务方法和tcc事务日志在一个事务域内处理
      *
@@ -139,7 +168,9 @@ public abstract class TccMainTemplateService<R, O extends BizId> {
      * @return
      */
     protected abstract R executeLocalTransactionPhase(O object);
+
     protected abstract void commitPhase(O object);
+
     protected abstract void cancelPhase(O object);
 
 }
