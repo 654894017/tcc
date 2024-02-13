@@ -12,11 +12,11 @@ import java.util.function.Function;
 
 public class TccMasterLogAsyncCheckRunnable<O extends BizId> implements Runnable {
     private final Logger log = LoggerFactory.getLogger(TccMasterLogAsyncCheckRunnable.class);
+    private final ITccMainLogService tccLogService;
+    private final String bizType;
+    private final Consumer<O> commitPhaseConsumer;
+    private final Consumer<O> cancelPhaseConsumer;
     private Function<Long, O> callbackParameterFunction;
-    private ITccMainLogService tccLogService;
-    private String bizType;
-    private Consumer<O> commitPhaseConsumer;
-    private Consumer<O> cancelPhaseConsumer;
     private TccMainLog tccMainLog;
     private O parameter;
 
@@ -35,8 +35,7 @@ public class TccMasterLogAsyncCheckRunnable<O extends BizId> implements Runnable
                                           Consumer<O> commitPhaseConsumer,
                                           Consumer<O> cancelPhaseConsumer,
                                           Function<Long, O> callbackParameterFunction,
-                                          TccMainLog tccMainLog
-    ) {
+                                          TccMainLog tccMainLog) {
         this.callbackParameterFunction = callbackParameterFunction;
         this.tccLogService = tccLogService;
         this.bizType = bizType;
@@ -54,24 +53,30 @@ public class TccMasterLogAsyncCheckRunnable<O extends BizId> implements Runnable
                     throw new BizIdInvalidException("无效的业务id: " + tccMainLog.getBizId());
                 }
             }
-            tccMainLog = tccLogService.get(parameter.getBizId());
             if (tccMainLog == null) {
-                throw new BizIdInvalidException("无效的业务id: " + parameter.getBizId());
+                tccMainLog = tccLogService.get(parameter.getBizId());
+                if (tccMainLog == null) {
+                    throw new BizIdInvalidException("无效的业务id: " + parameter.getBizId());
+                }
             }
             this.check(parameter, tccMainLog);
         } catch (Exception e) {
-            log.error("业务类型: {}, 业务id :{}, 异步check失败", bizType, parameter.getBizId(), e);
-            TccMainLog mainLog = tccLogService.get(tccMainLog.getBizId());
-            if (mainLog == null) {
-                return;
-            }
-            mainLog.check();
-            try {
-                tccLogService.update(mainLog);
-            } catch (Exception exception) {
-                log.error("业务类型: {}, 业务id :{}, 更新日志重试次数失败", bizType, parameter.getBizId(), e);
-            }
-            ;
+            handleException(e);
+        }
+    }
+
+    protected void handleException(Exception e) {
+        log.error("业务类型: {}, 业务id :{}, 异步check失败", bizType, parameter.getBizId(), e);
+        TccMainLog mainLog = tccLogService.get(tccMainLog.getBizId());
+        if (mainLog == null) {
+            log.error("业务类型: {}, 业务id :{}, 无效的BizId", bizType, parameter.getBizId(), e);
+            return;
+        }
+        mainLog.check();
+        try {
+            tccLogService.update(mainLog);
+        } catch (Exception exception) {
+            log.error("业务类型: {}, 业务id :{}, 更新日志重试次数失败", bizType, parameter.getBizId(), e);
         }
     }
 
@@ -84,12 +89,11 @@ public class TccMasterLogAsyncCheckRunnable<O extends BizId> implements Runnable
      *
      * @param parameter
      */
-    private void check(O parameter, TccMainLog tccMainLog) {
+    protected void check(O parameter, TccMainLog tccMainLog) {
         if (tccMainLog.isCommited() || tccMainLog.isRollbacked()) {
             log.warn("对应的tcclog日志信息已回滚或已提交, 不执行提交状态检查,业务类型: {}, 业务id :{}", bizType, parameter.getBizId());
             return;
         }
-
         if (tccMainLog.isLocalCommited()) {
             tccMainLog.commit();
             commitPhaseConsumer.accept(parameter);

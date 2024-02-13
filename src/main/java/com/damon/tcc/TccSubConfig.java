@@ -10,9 +10,7 @@ public class TccSubConfig {
     private ITccSubLogService tccSubLogService;
     private ILocalTransactionService localTransactionService;
     private String bizType;
-
     private DataSource dataSource;
-
     public TccSubConfig(ITccSubLogService tccSubLogService, ILocalTransactionService localTransactionService, DataSource dataSource, String bizType) {
         this.tccSubLogService = tccSubLogService;
         this.localTransactionService = localTransactionService;

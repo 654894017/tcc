@@ -43,12 +43,7 @@ public abstract class TccMainTemplateService<R, O extends BizId> {
 
     protected TccFailedLogIterator queryFailedLogs() {
         Integer failedLogsTotal = tccLogService.getFailedLogsTotal(tccMainConfig.getFailedCheckTimes());
-        Integer totalPage;
-        if (failedLogsTotal <= tccMainConfig.getTccFailedLogPageSize() && failedLogsTotal > 0) {
-            totalPage = 1;
-        } else {
-            totalPage = failedLogsTotal / tccMainConfig.getTccFailedLogPageSize() + 1;
-        }
+        Integer totalPage = (failedLogsTotal + tccMainConfig.getTccFailedLogPageSize() - 1) / tccMainConfig.getTccFailedLogPageSize();
         return new TccFailedLogIterator(totalPage, pageNumber ->
                 tccLogService.queryFailedLogs(tccMainConfig.getFailedCheckTimes(), tccMainConfig.getTccFailedLogPageSize(), pageNumber)
         );
@@ -56,12 +51,7 @@ public abstract class TccMainTemplateService<R, O extends BizId> {
 
     protected TccFailedLogIterator queryDeadLogs() {
         Integer deadLogsTotal = tccLogService.getDeadLogsTotal(tccMainConfig.getFailedCheckTimes());
-        Integer totalPage;
-        if (deadLogsTotal <= tccMainConfig.getTccFailedLogPageSize() && deadLogsTotal > 0) {
-            totalPage = 1;
-        } else {
-            totalPage = deadLogsTotal / tccMainConfig.getTccFailedLogPageSize() + 1;
-        }
+        Integer totalPage = (deadLogsTotal + tccMainConfig.getTccFailedLogPageSize() - 1) / tccMainConfig.getTccFailedLogPageSize();
         return new TccFailedLogIterator(totalPage, pageNumber ->
                 tccLogService.queryDeadLogs(tccMainConfig.getFailedCheckTimes(), tccMainConfig.getTccFailedLogPageSize(), pageNumber)
         );
@@ -116,10 +106,10 @@ public abstract class TccMainTemplateService<R, O extends BizId> {
         try {
             tryPhase(parameter);
         } catch (Exception exception) {
+            log.error("业务类型: {}, 业务id : {}, 预执行失败", bizType, parameter.getBizId(), exception);
             asyncCommitExecutorService.execute(
                     new TccMasterLogAsyncCheckRunnable<>(tccLogService, bizType, this::commitPhase, this::cancelPhase, parameter)
             );
-            log.error("业务类型: {}, 业务id : {}, 预执行失败", bizType, parameter.getBizId(), exception);
             throw exception;
         }
     }
