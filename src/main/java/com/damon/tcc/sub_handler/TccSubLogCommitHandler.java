@@ -1,7 +1,7 @@
 package com.damon.tcc.sub_handler;
 
 import com.damon.tcc.BizId;
-import com.damon.tcc.exception.TccSubLogInvalidException;
+import com.damon.tcc.exception.TccCommitException;
 import com.damon.tcc.sub_log.ITccSubLogService;
 import com.damon.tcc.sub_log.TccSubLog;
 import org.slf4j.Logger;
@@ -25,10 +25,11 @@ public class TccSubLogCommitHandler<P extends BizId> {
         try {
             TccSubLog tccSubLog = tccSubLogService.get(parameter.getBizId());
             if (tccSubLog == null) {
-                String errorMessage = "找不到对应的业务类型:%s, 业务id: %s, 关联的子事务日志 ";
-                throw new TccSubLogInvalidException(String.format(errorMessage, bizType, parameter.getBizId()));
+                log.warn("找不到对应的业务类型: {}, 业务id: {}, 关联的子事务日志，无法进行commit操作", bizType, parameter.getBizId());
+                return;
             }
             if (tccSubLog.isCommited()) {
+                log.info("业务类型: {}, 业务id: {}, 关联的子事务日志已完成Commit处理，不再继续执行 ", bizType, parameter.getBizId());
                 return;
             }
             tccSubLog.commit();
@@ -36,7 +37,7 @@ public class TccSubLogCommitHandler<P extends BizId> {
             commitPhaseConsumer.accept(parameter);
         } catch (Exception e) {
             log.error("子事务业务类型: {}, 业务id : {}, commit失败", bizType, parameter.getBizId(), e);
-            throw e;
+            throw new TccCommitException(e);
         }
     }
 }

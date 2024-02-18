@@ -1,6 +1,7 @@
 package com.damon.tcc;
 
 import cn.hutool.core.thread.NamedThreadFactory;
+import com.damon.tcc.exception.TccTryException;
 import com.damon.tcc.main_log.ITccMainLogService;
 import com.damon.tcc.main_log.TccMainLog;
 import com.damon.tcc.main_runnable.TccMasterLogAsyncCheckRunnable;
@@ -17,8 +18,8 @@ import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
 
-public abstract class TccMainTemplateService<R, O extends BizId> {
-    private final Logger log = LoggerFactory.getLogger(TccMainTemplateService.class);
+public abstract class TccMainService<R, O extends BizId> {
+    private final Logger log = LoggerFactory.getLogger(TccMainService.class);
     private final ExecutorService asyncCommitExecutorService;
     private final ExecutorService asyncCheckExecutorService;
     private final ITccMainLogService tccLogService;
@@ -26,7 +27,7 @@ public abstract class TccMainTemplateService<R, O extends BizId> {
     private final String bizType;
     private final TccMainConfig tccMainConfig;
 
-    public TccMainTemplateService(TccMainConfig config) {
+    public TccMainService(TccMainConfig config) {
         this.tccLogService = config.getTccLogService();
         this.bizType = config.getBizType();
         this.localTransactionService = config.getLocalTransactionService();
@@ -90,7 +91,7 @@ public abstract class TccMainTemplateService<R, O extends BizId> {
      * @param parameter
      * @return
      */
-    protected R process(O parameter) {
+    protected R process(O parameter) throws TccTryException {
         TccMainLog tccMainLog = new TccMainLog(parameter.getBizId());
         tccLogService.create(tccMainLog);
         log.info("业务类型: {}, 业务id : {}, 创建事务日志成功", bizType, parameter.getBizId());
@@ -102,7 +103,7 @@ public abstract class TccMainTemplateService<R, O extends BizId> {
         return result;
     }
 
-    private void executeTry(O parameter) {
+    private void executeTry(O parameter) throws TccTryException {
         try {
             tryPhase(parameter);
         } catch (Exception exception) {

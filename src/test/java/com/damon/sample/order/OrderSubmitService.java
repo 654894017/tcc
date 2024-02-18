@@ -1,16 +1,16 @@
-package com.damon.tcc.order;
+package com.damon.sample.order;
 
 import cn.hutool.core.util.IdUtil;
+import com.damon.sample.points.PointsDeductionService;
 import com.damon.tcc.TccMainConfig;
-import com.damon.tcc.TccMainTemplateService;
-import com.damon.tcc.points.PointsDeductionService;
+import com.damon.tcc.TccMainService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.BeanPropertyRowMapper;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 
 @Service
-public class OrderSubmitService extends TccMainTemplateService<Long, Order> {
+public class OrderSubmitService extends TccMainService<Long, Order> {
     private final JdbcTemplate jdbcTemplate;
     private final PointsDeductionService pointsDeductionService;
 

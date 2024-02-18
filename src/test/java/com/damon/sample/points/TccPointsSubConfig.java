@@ -1,4 +1,4 @@
-package com.damon.tcc.points;
+package com.damon.sample.points;
 
 import com.damon.tcc.TccSubConfig;
 import com.damon.tcc.sub_log.TccSubLogService;

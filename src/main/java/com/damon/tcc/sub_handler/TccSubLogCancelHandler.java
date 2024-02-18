@@ -1,8 +1,7 @@
 package com.damon.tcc.sub_handler;
 
 import com.damon.tcc.BizId;
-import com.damon.tcc.exception.TccSubLogInvalidException;
-import com.damon.tcc.main_runnable.TccMasterLogAsyncCancelRunnable;
+import com.damon.tcc.exception.TccCancelException;
 import com.damon.tcc.sub_log.ITccSubLogService;
 import com.damon.tcc.sub_log.TccSubLog;
 import org.slf4j.Logger;
@@ -11,7 +10,7 @@ import org.slf4j.LoggerFactory;
 import java.util.function.Consumer;
 
 public class TccSubLogCancelHandler<P extends BizId> {
-    private final Logger log = LoggerFactory.getLogger(TccMasterLogAsyncCancelRunnable.class);
+    private final Logger log = LoggerFactory.getLogger(TccSubLogCancelHandler.class);
     private final ITccSubLogService tccSubLogService;
     private final Consumer<P> cancelPhaseConsumer;
     private final String bizType;
@@ -26,10 +25,14 @@ public class TccSubLogCancelHandler<P extends BizId> {
         try {
             TccSubLog tccSubLog = tccSubLogService.get(parameter.getBizId());
             if (tccSubLog == null) {
-                String errorMessage = "找不到对应的业务类型:%s, 业务id: %s, 关联的子事务日志 ";
-                throw new TccSubLogInvalidException(String.format(errorMessage, bizType, parameter.getBizId()));
+                tccSubLog = new TccSubLog(parameter.getBizId());
+                tccSubLog.cancel();
+                tccSubLogService.create(tccSubLog);
+                log.warn("找不到对应的业务类型: {}, 业务id: {}, 关联的子事务日志信息，无法进行cancel操作", bizType, parameter.getBizId());
+                return;
             }
             if (tccSubLog.isCommited() || tccSubLog.isCanceled()) {
+                log.info("业务类型: {}, 业务id: {}, 关联的子事务日志已完成Cancel处理，不再继续执行 ", bizType, parameter.getBizId());
                 return;
             }
             tccSubLog.cancel();
@@ -37,7 +40,7 @@ public class TccSubLogCancelHandler<P extends BizId> {
             cancelPhaseConsumer.accept(parameter);
         } catch (Exception e) {
             log.error("子事务业务类型: {}, 业务id : {}, cancel失败", bizType, parameter.getBizId(), e);
-            throw e;
+            throw new TccCancelException(e);
         }
     }
 }

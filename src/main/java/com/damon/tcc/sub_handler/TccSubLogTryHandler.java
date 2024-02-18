@@ -1,6 +1,7 @@
 package com.damon.tcc.sub_handler;
 
 import com.damon.tcc.BizId;
+import com.damon.tcc.exception.TccTryException;
 import com.damon.tcc.sub_log.ITccSubLogService;
 import com.damon.tcc.sub_log.TccSubLog;
 import org.slf4j.Logger;
@@ -27,7 +28,7 @@ public class TccSubLogTryHandler<R, P extends BizId> {
             return tryPhaseFunction.apply(parameter);
         } catch (Exception e) {
             log.error("子事务业务类型: {}, 业务id : {}, try失败", bizType, parameter.getBizId(), e);
-            throw e;
+            throw new TccTryException(e);
         }
     }
 }

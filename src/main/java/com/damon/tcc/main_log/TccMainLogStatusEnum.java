@@ -10,8 +10,8 @@ public enum TccMainLogStatusEnum {
     ROOBACKED(2, "回滚事务成功"),
     LOCAL_COMMITED(3, "完成本地事务成功"),
     COMMITED(4, "提交事务成功");
-    private Integer status;
-    private String message;
+    private final Integer status;
+    private final String message;
 
     TccMainLogStatusEnum(Integer status, String message) {
         this.status = status;

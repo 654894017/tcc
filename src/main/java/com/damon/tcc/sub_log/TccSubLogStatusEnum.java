@@ -5,8 +5,8 @@ public enum TccSubLogStatusEnum {
     TRY(1, "创建事务成功"),
     COMMITTED(2, "提交事务成功"),
     CANCELED(3, "回滚事务成功");
-    private Integer status;
-    private String message;
+    private final Integer status;
+    private final String message;
 
     TccSubLogStatusEnum(Integer status, String message) {
         this.status = status;

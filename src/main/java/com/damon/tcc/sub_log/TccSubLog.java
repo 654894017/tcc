@@ -5,7 +5,6 @@ public class TccSubLog {
     private Long bizId;
     private Integer status;
     private int version;
-
     private Long lastUpdateTime;
     private Long createTime;
 

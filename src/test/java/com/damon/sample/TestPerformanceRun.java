@@ -1,6 +1,7 @@
-package com.damon;
+package com.damon.sample;
 
-import com.damon.tcc.order.OrderSubmitService;
+import com.damon.Application;
+import com.damon.sample.order.OrderSubmitService;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -12,16 +13,16 @@ import java.util.concurrent.Executors;
 
 @RunWith(SpringRunner.class)
 @SpringBootTest(classes = Application.class)
-public class TestRun {
+public class TestPerformanceRun {
     @Autowired
     private OrderSubmitService orderSubmitService;
 
     @Test
     public void test() throws InterruptedException {
         ExecutorService executorService = Executors.newFixedThreadPool(100);
-        for(int i = 0 ;i < 100 ;i++){
-            executorService.submit(()->{
-                for(int j=0;j< 10000;j++){
+        for (int i = 0; i < 100; i++) {
+            executorService.submit(() -> {
+                for (int j = 0; j < 10000; j++) {
                     orderSubmitService.execute(12345678L, 100L);
                 }
             });
@@ -34,9 +35,9 @@ public class TestRun {
     public void testTryFailed() throws InterruptedException {
 
         ExecutorService executorService = Executors.newFixedThreadPool(100);
-        for(int i = 0 ;i < 100 ;i++){
-            executorService.submit(()->{
-                for(int j=0;j< 10000;j++){
+        for (int i = 0; i < 100; i++) {
+            executorService.submit(() -> {
+                for (int j = 0; j < 10000; j++) {
                     orderSubmitService.execute(12345679L, 100L);
                 }
             });

@@ -1,4 +1,4 @@
-package com.damon.tcc.order;
+package com.damon.sample.order;
 
 import com.damon.tcc.TccMainConfig;
 import com.damon.tcc.transaction.DefaultLocalTransactionService;
@@ -22,7 +22,7 @@ public class TccOrderConfig {
     public TccMainConfig tccConfig(@Qualifier("orderDefaultLocalTransactionService") ILocalTransactionService localTransactionService,
                                    DataSource dataSource) {
         return new TccMainConfig(bizType, localTransactionService, dataSource, 100,
-                100 , 1024 * 10, 100,
+                100, 1024 * 10, 100,
                 100, 1024 * 10, 5, 100);
     }
 

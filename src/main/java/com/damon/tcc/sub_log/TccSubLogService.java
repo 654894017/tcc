@@ -24,12 +24,9 @@ public class TccSubLogService implements ITccSubLogService {
     @Override
     public void create(TccSubLog tccSubLog) {
         try {
-            int i = jdbcTemplate.update(
+            jdbcTemplate.update(
                     String.format(INSETR_TCC_SUB_LOG, bizType),
                     tccSubLog.getBizId(), tccSubLog.getStatus(), tccSubLog.getLastUpdateTime(), tccSubLog.getCreateTime(), tccSubLog.getVersion());
-            if (i != 1) {
-                throw new OptimisticLockException("insert tcc sub sub log failed");
-            }
         } catch (DuplicateKeyException e) {
             throw new BizIdConflictException(e);
         }

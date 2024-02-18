@@ -1,4 +1,4 @@
-package com.damon.tcc.points;
+package com.damon.sample.points;
 
 public class Points {
 

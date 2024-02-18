@@ -7,18 +7,18 @@ import com.damon.tcc.transaction.ILocalTransactionService;
 import javax.sql.DataSource;
 
 public class TccMainConfig {
-    private ILocalTransactionService localTransactionService;
-    private ITccMainLogService tccLogService;
-    private String bizType;
-    private Integer asyncCommitThreadMinNumber;
-    private Integer asyncCommitThreadMaxNumber;
-    private Integer asyncCheckThreadMinNumber;
-    private Integer asyncCheckThreadMaxNumber;
-    private Integer asyncCommitQueueSize;
-    private Integer asyncCheckQueueSize;
-    private Integer failedCheckTimes;
-    private Integer tccFailedLogPageSize;
-    private DataSource dataSource;
+    private final ILocalTransactionService localTransactionService;
+    private final ITccMainLogService tccLogService;
+    private final String bizType;
+    private final Integer asyncCommitThreadMinNumber;
+    private final Integer asyncCommitThreadMaxNumber;
+    private final Integer asyncCheckThreadMinNumber;
+    private final Integer asyncCheckThreadMaxNumber;
+    private final Integer asyncCommitQueueSize;
+    private final Integer asyncCheckQueueSize;
+    private final Integer failedCheckTimes;
+    private final Integer tccFailedLogPageSize;
+    private final DataSource dataSource;
 
     public TccMainConfig(String bizType, ILocalTransactionService localTransactionService, DataSource dataSource) {
         this(bizType, localTransactionService, dataSource,

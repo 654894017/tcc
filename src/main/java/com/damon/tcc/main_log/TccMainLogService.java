@@ -25,12 +25,9 @@ public class TccMainLogService implements ITccMainLogService {
 
     @Override
     public void create(TccMainLog tccMainLog) {
-        int i = jdbcTemplate.update(
+        jdbcTemplate.update(
                 String.format(INSETR_TCC_LOG, bizType),
                 tccMainLog.getBizId(), tccMainLog.getStatus(), tccMainLog.getVersion(), tccMainLog.getCheckedTimes(), tccMainLog.getLastUpdateTime(), tccMainLog.getCreateTime());
-        if (i != 1) {
-            throw new OptimisticLockException("insert tcc main_log failed");
-        }
     }
 
     @Override
