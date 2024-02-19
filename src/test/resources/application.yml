@@ -1,0 +1,21 @@
+spring:
+  profiles:
+    active: dev
+  jackson:
+    property-naming-strategy: SNAKE_CASE
+  mvc:
+    pathmatch:
+      matching-strategy: ant_path_matcher
+server:
+  #配置端口
+  port: 9898
+  tomcat: #对tomcat配置
+    threads:
+      max: 200 #最大的工作线程， 默认是200
+      min-spare: 5 #最小工作线程, 默认是10
+    accept-count: 200 #tomcat启动的线程达到最大值, 接受排队的请求个数,默认100
+    max-connections: 2000 #最大连接数, 并发数
+    connection-timeout: 10000 #建立连接的超时时间, 单位是毫秒
+  servlet:
+    register-default-servlet: true
+    context-path: /

@@ -1,4 +1,4 @@
-package com.damon.sample.points;
+package com.damon.sample.points.domain;
 
 public class Points {
 

@@ -1,6 +1,6 @@
 package com.damon.tcc.main_runnable;
 
-import com.damon.sample.order.Order;
+import com.damon.sample.order.domain.Order;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;

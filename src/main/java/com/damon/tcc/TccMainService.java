@@ -1,6 +1,7 @@
 package com.damon.tcc;
 
 import cn.hutool.core.thread.NamedThreadFactory;
+import com.damon.tcc.exception.TccLocalTransactionException;
 import com.damon.tcc.exception.TccTryException;
 import com.damon.tcc.main_log.ITccMainLogService;
 import com.damon.tcc.main_log.TccMainLog;
@@ -79,8 +80,8 @@ public abstract class TccMainService<R, O extends BizId> {
             List<TccMainLog> tccMainLogs = iterator.next();
             tccMainLogs.forEach(tccLog -> {
                 asyncCheckExecutorService.execute(
-                        new TccMasterLogAsyncCheckRunnable<>(tccLogService, bizType, this::commitPhase,
-                                this::cancelPhase, this::callbackParameter, tccLog
+                        new TccMasterLogAsyncCheckRunnable<>(tccLogService, bizType, this::commit,
+                                this::cancel, this::callbackParameter, tccLog
                         )
                 );
             });
@@ -105,33 +106,33 @@ public abstract class TccMainService<R, O extends BizId> {
 
     private void executeTry(O parameter) throws TccTryException {
         try {
-            tryPhase(parameter);
+            attempt(parameter);
         } catch (Exception exception) {
             log.error("业务类型: {}, 业务id : {}, 预执行失败", bizType, parameter.getBizId(), exception);
             asyncCommitExecutorService.execute(
-                    new TccMasterLogAsyncCheckRunnable<>(tccLogService, bizType, this::commitPhase, this::cancelPhase, parameter)
+                    new TccMasterLogAsyncCheckRunnable<>(tccLogService, bizType, this::commit, this::cancel, parameter)
             );
-            throw exception;
+            throw new TccTryException(exception);
         }
     }
 
     private void executeCommit(O parameter, TccMainLog tccMainLog) {
         asyncCommitExecutorService.execute(
-                new TccMasterLogAsyncCommitRunnable<>(tccLogService, tccMainLog, bizType, this::commitPhase, parameter)
+                new TccMasterLogAsyncCommitRunnable<>(tccLogService, tccMainLog, bizType, this::commit, parameter)
         );
     }
 
     private R executeLocalTransaction(O parameter, TccMainLog tccMainLog) {
         try {
             return localTransactionService.execute(
-                    new TccLocalTransactionSupplier<>(tccLogService, tccMainLog, this::executeLocalTransactionPhase, parameter)
+                    new TccLocalTransactionSupplier<>(tccLogService, tccMainLog, this::executeLocalTransaction, parameter)
             );
         } catch (Exception exception) {
             log.error("业务类型: {}, 业务id : {}, 本地事务执行失败", bizType, parameter.getBizId(), exception);
             asyncCommitExecutorService.execute(
-                    new TccMasterLogAsyncCheckRunnable<>(tccLogService, bizType, this::commitPhase, this::cancelPhase, parameter)
+                    new TccMasterLogAsyncCheckRunnable<>(tccLogService, bizType, this::commit, this::cancel, parameter)
             );
-            throw exception;
+            throw new TccLocalTransactionException(exception);
         }
     }
 
@@ -150,7 +151,7 @@ public abstract class TccMainService<R, O extends BizId> {
      *
      * @param object
      */
-    protected abstract void tryPhase(O object);
+    protected abstract void attempt(O object);
 
     /**
      * 执行本地事务方法和tcc事务日志在一个事务域内处理
@@ -158,10 +159,10 @@ public abstract class TccMainService<R, O extends BizId> {
      * @param object
      * @return
      */
-    protected abstract R executeLocalTransactionPhase(O object);
+    protected abstract R executeLocalTransaction(O object);
 
-    protected abstract void commitPhase(O object);
+    protected abstract void commit(O object);
 
-    protected abstract void cancelPhase(O object);
+    protected abstract void cancel(O object);
 
 }

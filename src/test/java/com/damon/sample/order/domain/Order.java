@@ -1,4 +1,4 @@
-package com.damon.sample.order;
+package com.damon.sample.order.domain;
 
 import com.damon.tcc.BizId;
 

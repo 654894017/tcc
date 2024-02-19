@@ -7,10 +7,10 @@ import javax.sql.DataSource;
 
 public class TccSubConfig {
 
+    private final DataSource dataSource;
     private ITccSubLogService tccSubLogService;
     private ILocalTransactionService localTransactionService;
     private String bizType;
-    private final DataSource dataSource;
 
     public TccSubConfig(ITccSubLogService tccSubLogService, ILocalTransactionService localTransactionService, DataSource dataSource, String bizType) {
         this.tccSubLogService = tccSubLogService;

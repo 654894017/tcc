@@ -7,6 +7,7 @@ public class TccMainLog {
     private int checkedTimes;
     private Long lastUpdateTime;
     private Long createTime;
+
     public TccMainLog(Long bizId) {
         Long createTime = System.currentTimeMillis();
         this.checkedTimes = 0;
