@@ -34,8 +34,7 @@ public class OrderSubmitAppService extends TccMainService<Long, Order> implement
 
     @Override
     protected Order callbackParameter(Long bizId) {
-        Order order = jdbcTemplate.queryForObject("select * from tcc_demo_order where order_id = ? ", new BeanPropertyRowMapper<>(Order.class), bizId);
-        return order;
+        return jdbcTemplate.queryForObject("select * from tcc_demo_order where order_id = ? ", new BeanPropertyRowMapper<>(Order.class), bizId);
     }
 
     @Override
@@ -45,12 +44,10 @@ public class OrderSubmitAppService extends TccMainService<Long, Order> implement
         Order order = new Order(orderId, 0, userId, points);
         return super.process(order);
     }
-
     @Override
     protected void attempt(Order order) {
         pointsGateway.tryDeductionPoints(order.getOrderId(), order.getUserId(), order.getDeductionPoints());
     }
-
     @Override
     protected Long executeLocalTransaction(Order object) {
         int result = jdbcTemplate.update("update tcc_demo_order set status = ?  where order_id = ? ", 1, object.getOrderId());
@@ -59,12 +56,10 @@ public class OrderSubmitAppService extends TccMainService<Long, Order> implement
         }
         return object.getOrderId();
     }
-
     @Override
     protected void commit(Order order) {
         pointsGateway.commitDeductionPoints(order.getOrderId(), order.getUserId(), order.getDeductionPoints());
     }
-
     @Override
     protected void cancel(Order order) {
         pointsGateway.cancelDeductionPoints(order.getOrderId(), order.getUserId(), order.getDeductionPoints());

@@ -76,7 +76,7 @@ public class TccMasterLogAsyncCheckRunnable<O extends BizId> implements Runnable
         try {
             tccLogService.update(mainLog);
         } catch (Exception exception) {
-            log.error("业务类型: {}, 业务id :{}, 更新日志重试次数失败", bizType, parameter.getBizId(), e);
+            log.error("业务类型: {}, 业务id :{}, 更新日志重试次数失败", bizType, parameter.getBizId(), exception);
         }
     }
 

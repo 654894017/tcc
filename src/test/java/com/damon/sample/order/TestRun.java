@@ -21,9 +21,13 @@ public class TestRun {
 
     @Test
     public void testTryFailed() throws InterruptedException {
-        //不存在的用户id
-        orderSubmitAppService.submitOrder(12345679L, 100L);
-        Thread.sleep(2000);
+        try {
+            orderSubmitAppService.submitOrder(12345679L, 100L);
+            Thread.sleep(2000);
+        } catch (Exception e) {
+            //需要catch，并睡眠不然线程池来不及调用cancel就被关闭了
+            Thread.sleep(2000);
+        }
     }
 
     @Test

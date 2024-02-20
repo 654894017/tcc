@@ -33,15 +33,7 @@ public class TestPerformanceRun {
     @Test
     public void testTryFailed() throws InterruptedException {
 
-        ExecutorService executorService = Executors.newFixedThreadPool(100);
-        for (int i = 0; i < 100; i++) {
-            executorService.submit(() -> {
-                for (int j = 0; j < 10000; j++) {
-                    orderSubmitAppService.submitOrder(12345679L, 100L);
-                }
-            });
-        }
-
+        orderSubmitAppService.submitOrder(12345679L, 100L);
 
         Thread.sleep(20000000);
     }

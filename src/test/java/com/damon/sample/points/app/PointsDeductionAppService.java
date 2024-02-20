@@ -20,7 +20,6 @@ public class PointsDeductionAppService extends TccSubService<Boolean, PointsDedu
         super(config);
         this.jdbcTemplate = new JdbcTemplate(config.getDataSource());
     }
-
     @Override
     public boolean attempt(PointsDeductCmd parameter) {
         return super.attempt(parameter, cmd -> {
@@ -38,6 +37,7 @@ public class PointsDeductionAppService extends TccSubService<Boolean, PointsDedu
             return true;
         });
     }
+
     @Override
     public void commit(PointsDeductCmd parameter) {
         super.commit(parameter, cmd -> {
@@ -47,6 +47,7 @@ public class PointsDeductionAppService extends TccSubService<Boolean, PointsDedu
             }
         });
     }
+
     @Override
     public void cancel(PointsDeductCmd parameter) {
         super.cancel(parameter, cmd -> {
@@ -56,8 +57,8 @@ public class PointsDeductionAppService extends TccSubService<Boolean, PointsDedu
                 return;
             }
 
-            int result2 = jdbcTemplate.update("update tcc_demo_points set points = points + ? where user_id = ?",
-                    cmd.getUserId(), cmd.getDeductionPoints()
+            int result2 = jdbcTemplate.update("update tcc_demo_user_points set points = points + ? where user_id = ?",
+                     cmd.getDeductionPoints(), cmd.getUserId()
             );
             if (result2 == 0) {
                 throw new RuntimeException("无效的用户id，无法进行积分rollback");
