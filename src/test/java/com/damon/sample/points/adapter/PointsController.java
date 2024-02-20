@@ -13,14 +13,17 @@ import org.springframework.web.bind.annotation.RestController;
 public class PointsController {
     @Autowired
     private PointsDeductionAppService pointsDeductionAppService;
+
     @PostMapping("try_deduction")
     public void deductionTry(@RequestBody PointsDeductCmd cmd) {
         pointsDeductionAppService.attempt(cmd);
     }
+
     @PostMapping("commit_deduction")
     public void deductionCommit(@RequestBody PointsDeductCmd cmd) {
         pointsDeductionAppService.commit(cmd);
     }
+
     @PostMapping("cancel_deduction")
     public void deductionCancel(@RequestBody PointsDeductCmd cmd) {
         pointsDeductionAppService.cancel(cmd);

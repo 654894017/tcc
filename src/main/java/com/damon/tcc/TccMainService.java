@@ -19,7 +19,7 @@ import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
 
-public abstract class TccMainService<R, O extends BizId> {
+public abstract class TccMainService<R, PD, O extends BizId> {
     private final Logger log = LoggerFactory.getLogger(TccMainService.class);
     private final ExecutorService asyncCommitExecutorService;
     private final ExecutorService asyncCheckExecutorService;
@@ -96,17 +96,17 @@ public abstract class TccMainService<R, O extends BizId> {
         TccMainLog tccMainLog = new TccMainLog(parameter.getBizId());
         tccLogService.create(tccMainLog);
         log.info("业务类型: {}, 业务id : {}, 创建事务日志成功", bizType, parameter.getBizId());
-        this.executeTry(parameter);
+        PD processData = this.executeTry(parameter);
         log.info("业务类型: {}, 业务id : {}, 预执行成功", bizType, parameter.getBizId());
-        R result = this.executeLocalTransaction(parameter, tccMainLog);
+        R result = this.executeLocalTransaction(parameter, tccMainLog, processData);
         log.info("业务类型: {}, 业务id : {}, 本地事务成功", bizType, parameter.getBizId());
         this.executeCommit(parameter, tccMainLog);
         return result;
     }
 
-    private void executeTry(O parameter) throws TccTryException {
+    private PD executeTry(O parameter) throws TccTryException {
         try {
-            attempt(parameter);
+            return attempt(parameter);
         } catch (Exception exception) {
             log.error("业务类型: {}, 业务id : {}, 预执行失败", bizType, parameter.getBizId(), exception);
             asyncCommitExecutorService.execute(
@@ -122,10 +122,10 @@ public abstract class TccMainService<R, O extends BizId> {
         );
     }
 
-    private R executeLocalTransaction(O parameter, TccMainLog tccMainLog) {
+    private R executeLocalTransaction(O parameter, TccMainLog tccMainLog, PD processData) {
         try {
             return localTransactionService.execute(
-                    new TccLocalTransactionSupplier<>(tccLogService, tccMainLog, this::executeLocalTransaction, parameter)
+                    new TccLocalTransactionSupplier<>(tccLogService, tccMainLog, this::executeLocalTransaction, parameter, processData)
             );
         } catch (Exception exception) {
             log.error("业务类型: {}, 业务id : {}, 本地事务执行失败", bizType, parameter.getBizId(), exception);
@@ -150,16 +150,17 @@ public abstract class TccMainService<R, O extends BizId> {
      * 服务调用者可以比较好的应对较复杂的业务逻辑
      *
      * @param object
+     * @return 返回的结果会作为本地事务方法的入参(processData)
      */
-    protected abstract void attempt(O object);
+    protected abstract PD attempt(O object);
 
     /**
      * 执行本地事务方法和tcc事务日志在一个事务域内处理
-     *
      * @param object
+     * @param processData  attempt 方法返回的结果
      * @return
      */
-    protected abstract R executeLocalTransaction(O object);
+    protected abstract R executeLocalTransaction(O object, PD processData);
 
     protected abstract void commit(O object);
 

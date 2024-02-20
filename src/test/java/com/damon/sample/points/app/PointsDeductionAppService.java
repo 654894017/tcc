@@ -15,11 +15,18 @@ import org.springframework.transaction.support.TransactionSynchronizationManager
 public class PointsDeductionAppService extends TccSubService<Boolean, PointsDeductCmd> implements IPointsDeductionAppService {
     private final Logger log = LoggerFactory.getLogger(PointsDeductionAppService.class);
     private final JdbcTemplate jdbcTemplate;
+
     @Autowired
     public PointsDeductionAppService(TccSubConfig config) {
         super(config);
         this.jdbcTemplate = new JdbcTemplate(config.getDataSource());
     }
+
+    /**
+     * try执行积分扣减
+     * @param parameter
+     * @return
+     */
     @Override
     public boolean attempt(PointsDeductCmd parameter) {
         return super.attempt(parameter, cmd -> {
@@ -38,6 +45,10 @@ public class PointsDeductionAppService extends TccSubService<Boolean, PointsDedu
         });
     }
 
+    /**
+     * commit提交积分扣减
+     * @param parameter
+     */
     @Override
     public void commit(PointsDeductCmd parameter) {
         super.commit(parameter, cmd -> {
@@ -47,7 +58,10 @@ public class PointsDeductionAppService extends TccSubService<Boolean, PointsDedu
             }
         });
     }
-
+    /**
+     * cancel回顾积分扣减
+     * @param parameter
+     */
     @Override
     public void cancel(PointsDeductCmd parameter) {
         super.cancel(parameter, cmd -> {
@@ -58,7 +72,7 @@ public class PointsDeductionAppService extends TccSubService<Boolean, PointsDedu
             }
 
             int result2 = jdbcTemplate.update("update tcc_demo_user_points set points = points + ? where user_id = ?",
-                     cmd.getDeductionPoints(), cmd.getUserId()
+                    cmd.getDeductionPoints(), cmd.getUserId()
             );
             if (result2 == 0) {
                 throw new RuntimeException("无效的用户id，无法进行积分rollback");
