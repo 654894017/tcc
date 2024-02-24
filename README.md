@@ -1,6 +1,6 @@
 ## TCC
 
-tcc框架用于解决分布式场景多服务间的分布式事务，该框架不建立在dubbo、http 、grpc等协议基础上面，服务可以任意选择暴露的协议，
+tcc框架用于解决分布式场景多服务间的分布式事务，该框架不建立在dubbo、http 、grpc等基础协议上层，服务可以任意选择暴露的协议，
 
 只要遵循Try 、Commit、 Cancel规范即可。已解决悬挂、幂等、空回滚问题，业务层面无需关注这部分处理。
 
@@ -55,14 +55,14 @@ public class OrderSubmitAppService extends TccMainService<Long, Map<String, Bool
     }
 
     /**
-     * 检查失败的日志，已纠正事务是否需要回顾还是提交
+     * 检查失败的日志，校正事务是否需要回顾还是提交
      */
     public void executeFailedLogCheck() {
         super.executeFailedLogCheck();
     }
 
     /**
-     * 检查死亡的日志，已纠正事务是否需要回顾还是提交
+     * 检查死亡的日志，校正事务是否需要回顾还是提交
      */
     public void executeDeadLogCheck() {
         super.executeDeadLogCheck();
