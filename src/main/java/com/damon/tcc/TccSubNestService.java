@@ -14,6 +14,7 @@ import com.damon.tcc.sub_log.ITccSubLogService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.function.BiFunction;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
@@ -42,7 +43,7 @@ public abstract class TccSubNestService<R, P extends SubBizId> {
      * @param <PD>
      * @return
      */
-    protected <PD> R attempt(P parameter, Function<P, PD> attemptFunction, TwoParameterFunction<P, PD, R> executeLocalTransactionFunction) throws TccTryException {
+    protected <PD> R attempt(P parameter, Function<P, PD> attemptFunction, BiFunction<P, PD, R> executeLocalTransactionFunction) throws TccTryException {
         try {
             PD pd = attemptFunction.apply(parameter);
             R result = localTransactionService.execute(() ->
