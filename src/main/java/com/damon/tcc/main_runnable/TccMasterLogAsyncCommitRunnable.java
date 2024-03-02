@@ -1,6 +1,6 @@
 package com.damon.tcc.main_runnable;
 
-import com.damon.tcc.BizId;
+import com.damon.tcc.annotation.BizId;
 import com.damon.tcc.main_log.ITccMainLogService;
 import com.damon.tcc.main_log.TccMainLog;
 import org.slf4j.Logger;

@@ -1,6 +1,6 @@
 package com.damon.tcc.sub_handler;
 
-import com.damon.tcc.BizId;
+import com.damon.tcc.annotation.SubBizId;
 import com.damon.tcc.exception.TccCancelException;
 import com.damon.tcc.sub_log.ITccSubLogService;
 import com.damon.tcc.sub_log.TccSubLog;
@@ -9,7 +9,7 @@ import org.slf4j.LoggerFactory;
 
 import java.util.function.Consumer;
 
-public class TccSubLogCancelHandler<P extends BizId> {
+public class TccSubLogCancelHandler<P extends SubBizId> {
     private final Logger log = LoggerFactory.getLogger(TccSubLogCancelHandler.class);
     private final ITccSubLogService tccSubLogService;
     private final Consumer<P> cancelPhaseConsumer;
@@ -23,16 +23,16 @@ public class TccSubLogCancelHandler<P extends BizId> {
 
     public void execute(P parameter) {
         try {
-            TccSubLog tccSubLog = tccSubLogService.get(parameter.getBizId());
+            TccSubLog tccSubLog = tccSubLogService.get(parameter.getBizId(), parameter.getSubBizId());
             if (tccSubLog == null) {
-                tccSubLog = new TccSubLog(parameter.getBizId());
+                tccSubLog = new TccSubLog(parameter.getBizId(), parameter.getSubBizId());
                 tccSubLog.cancel();
                 tccSubLogService.create(tccSubLog);
                 log.warn("找不到对应的业务类型: {}, 业务id: {}, 关联的子事务日志信息，无法进行cancel操作", bizType, parameter.getBizId());
                 return;
             }
             if (tccSubLog.isCommited() || tccSubLog.isCanceled()) {
-                log.info("业务类型: {}, 业务id: {}, 关联的子事务日志已完成Cancel处理，不再继续执行 ", bizType, parameter.getBizId());
+                log.info("业务类型: {}, 业务id: {}, 关联的子事务日志已完成Commit或Cancel处理，不再继续执行 ", bizType, parameter.getBizId());
                 return;
             }
             tccSubLog.cancel();

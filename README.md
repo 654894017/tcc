@@ -2,18 +2,19 @@
 
 tcc框架用于解决分布式场景多服务间的分布式事务，该框架不建立在dubbo、http 、grpc等基础协议上层，服务可以任意选择暴露的协议，
 
-只要遵循Try 、Commit、 Cancel规范即可。已解决悬挂、幂等、空回滚问题，业务层面无需关注这部分处理。
+只要遵循Try 、Commit、 Cancel规范即可。已解决悬挂、幂等、空回滚、事务嵌套问题，业务层面无需关注这部分处理。
 
 **tcc分为以下几个阶段：**
 
-1.  执行前置动作
-2.  Try
-3.  执行本地事务
-4.  Commit\Cancel  (根据本地事务的执行的成员与否，进行commit还是cancel)
+1. 执行前置动作
+2. Try
+3. 执行本地事务
+4. Commit\Cancel  (根据本地事务的执行的成功与否，进行commit还是cancel)
 
 ## 示例
 
-该示例主要用于用户下单的同时，需要扣减用户积分的场景，订单服务和积分服务分别是独立服务部署，它们之间存在分布式事务的问题， 我们通过当前框架展示是如何解决以上问题的。
+该示例主要用于用户下单的同时，需要扣减用户积分的场景，订单服务和积分服务分别是独立服务部署，它们之间存在分布式事务的问题，
+我们通过当前框架展示是如何解决以上问题的。
 
 <https://github.com/654894017/tcc/tree/master/src/test/java/com/damon/sample>
 
@@ -32,7 +33,7 @@ import cn.hutool.core.util.IdUtil;
 import com.damon.sample.order.client.IOrderSubmitAppService;
 import com.damon.sample.order.domain.IPointsGateway;
 import com.damon.sample.order.domain.Order;
-import com.damon.tcc.TccMainConfig;
+import com.damon.tcc.config.TccMainConfig;
 import com.damon.tcc.TccMainService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.BeanPropertyRowMapper;
@@ -67,7 +68,8 @@ public class OrderSubmitAppService extends TccMainService<Long, Map<String, Bool
     public void executeDeadLogCheck() {
         super.executeDeadLogCheck();
     }
-	 /**
+
+    /**
      * 执行失败日志检查的时候需要回查请求参数（因为事务日志未记录方法请求参数，所以需要回查一下）
      * @param bizId 实体对象id（业务id）
      * @return
@@ -147,7 +149,7 @@ package com.damon.sample.points.app;
 
 import com.damon.sample.points.client.IPointsDeductionAppService;
 import com.damon.sample.points.client.PointsDeductCmd;
-import com.damon.tcc.TccSubConfig;
+import com.damon.tcc.config.TccSubConfig;
 import com.damon.tcc.TccSubService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -203,6 +205,7 @@ public class PointsDeductionAppService extends TccSubService<Boolean, PointsDedu
             }
         });
     }
+
     /**
      * cancel回顾积分扣减
      * @param parameter

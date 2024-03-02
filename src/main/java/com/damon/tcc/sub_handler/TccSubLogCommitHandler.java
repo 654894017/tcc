@@ -1,6 +1,6 @@
 package com.damon.tcc.sub_handler;
 
-import com.damon.tcc.BizId;
+import com.damon.tcc.annotation.SubBizId;
 import com.damon.tcc.exception.TccCommitException;
 import com.damon.tcc.sub_log.ITccSubLogService;
 import com.damon.tcc.sub_log.TccSubLog;
@@ -9,7 +9,7 @@ import org.slf4j.LoggerFactory;
 
 import java.util.function.Consumer;
 
-public class TccSubLogCommitHandler<P extends BizId> {
+public class TccSubLogCommitHandler<P extends SubBizId> {
     private final Logger log = LoggerFactory.getLogger(TccSubLogCommitHandler.class);
     private final ITccSubLogService tccSubLogService;
     private final Consumer<P> commitPhaseConsumer;
@@ -23,13 +23,13 @@ public class TccSubLogCommitHandler<P extends BizId> {
 
     public void execute(P parameter) {
         try {
-            TccSubLog tccSubLog = tccSubLogService.get(parameter.getBizId());
+            TccSubLog tccSubLog = tccSubLogService.get(parameter.getBizId(), parameter.getSubBizId());
             if (tccSubLog == null) {
                 log.warn("找不到对应的业务类型: {}, 业务id: {}, 关联的子事务日志，无法进行commit操作", bizType, parameter.getBizId());
                 return;
             }
-            if (tccSubLog.isCommited()) {
-                log.info("业务类型: {}, 业务id: {}, 关联的子事务日志已完成Commit处理，不再继续执行 ", bizType, parameter.getBizId());
+            if (tccSubLog.isCommited() || tccSubLog.isCanceled()) {
+                log.info("业务类型: {}, 业务id: {}, 关联的子事务日志已完成Commit或Cancel处理，不再继续执行 ", bizType, parameter.getBizId());
                 return;
             }
             tccSubLog.commit();

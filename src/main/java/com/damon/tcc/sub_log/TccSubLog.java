@@ -3,17 +3,19 @@ package com.damon.tcc.sub_log;
 
 public class TccSubLog {
     private Long bizId;
+    private Long subBizId;
     private Integer status;
     private int version;
     private Long lastUpdateTime;
     private Long createTime;
 
-    public TccSubLog(Long bizId) {
+    public TccSubLog(Long bizId, Long subBizId) {
         this.bizId = bizId;
         this.status = TccSubLogStatusEnum.TRY.getStatus();
         this.version = 0;
         this.createTime = System.currentTimeMillis();
         this.lastUpdateTime = createTime;
+        this.subBizId = subBizId;
     }
 
     public TccSubLog() {
@@ -81,5 +83,13 @@ public class TccSubLog {
 
     public void setCreateTime(Long createTime) {
         this.createTime = createTime;
+    }
+
+    public Long getSubBizId() {
+        return subBizId;
+    }
+
+    public void setSubBizId(Long subBizId) {
+        this.subBizId = subBizId;
     }
 }

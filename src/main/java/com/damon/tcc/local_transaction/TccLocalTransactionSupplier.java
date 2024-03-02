@@ -1,6 +1,6 @@
-package com.damon.tcc.transaction;
+package com.damon.tcc.local_transaction;
 
-import com.damon.tcc.BizId;
+import com.damon.tcc.annotation.BizId;
 import com.damon.tcc.main_log.ITccMainLogService;
 import com.damon.tcc.main_log.TccMainLog;
 

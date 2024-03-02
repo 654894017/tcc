@@ -1,6 +1,6 @@
 package com.damon.sample.order.domain;
 
-import com.damon.tcc.BizId;
+import com.damon.tcc.annotation.BizId;
 
 public class Order implements BizId {
 
