@@ -1,13 +1,15 @@
 package com.damon.tcc;
 
+import com.damon.tcc.annotation.SubBizId;
+import com.damon.tcc.config.TccSubConfig;
 import com.damon.tcc.exception.TccCancelException;
 import com.damon.tcc.exception.TccCommitException;
 import com.damon.tcc.exception.TccTryException;
+import com.damon.tcc.local_transaction.ILocalTransactionService;
 import com.damon.tcc.sub_handler.TccSubLogCancelHandler;
 import com.damon.tcc.sub_handler.TccSubLogCommitHandler;
 import com.damon.tcc.sub_handler.TccSubLogTryHandler;
 import com.damon.tcc.sub_log.ITccSubLogService;
-import com.damon.tcc.transaction.ILocalTransactionService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -15,12 +17,12 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 
 /**
- * 使用示例
+ * tcc子事务服务
  *
  * @param <R>
  * @param <P>
  */
-public abstract class TccSubService<R, P extends BizId> {
+public abstract class TccSubService<R, P extends SubBizId> {
     private final Logger log = LoggerFactory.getLogger(TccSubService.class);
     private final String bizType;
     private final ITccSubLogService tccSubLogService;

@@ -4,8 +4,8 @@ import cn.hutool.core.util.IdUtil;
 import com.damon.sample.order.client.IOrderSubmitAppService;
 import com.damon.sample.order.domain.IPointsGateway;
 import com.damon.sample.order.domain.Order;
-import com.damon.tcc.TccMainConfig;
 import com.damon.tcc.TccMainService;
+import com.damon.tcc.config.TccMainConfig;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.BeanPropertyRowMapper;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -27,14 +27,14 @@ public class OrderSubmitAppService extends TccMainService<Long, Map<String, Bool
     }
 
     /**
-     * 检查失败的日志，已纠正事务是否需要回顾还是提交
+     * 检查失败的日志，用于纠正事务是否需要回顾还是提交
      */
     public void executeFailedLogCheck() {
         super.executeFailedLogCheck();
     }
 
     /**
-     * 检查死亡的日志，已纠正事务是否需要回顾还是提交
+     * 检查死亡的日志，用于纠正事务是否需要回顾还是提交
      */
     public void executeDeadLogCheck() {
         super.executeDeadLogCheck();
@@ -42,6 +42,7 @@ public class OrderSubmitAppService extends TccMainService<Long, Map<String, Bool
 
     /**
      * 执行失败日志检查的时候需要回查请求参数（因为事务日志未记录方法请求参数，所以需要回查一下）
+     *
      * @param bizId 实体对象id（业务id）
      * @return
      */

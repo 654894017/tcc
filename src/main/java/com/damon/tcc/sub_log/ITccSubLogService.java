@@ -6,6 +6,6 @@ public interface ITccSubLogService {
 
     void update(TccSubLog tccSubLog);
 
-    TccSubLog get(Long bizId);
+    TccSubLog get(Long bizId, Long subBizId);
 
 }

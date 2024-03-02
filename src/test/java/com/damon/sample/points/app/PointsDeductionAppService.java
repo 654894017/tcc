@@ -2,8 +2,8 @@ package com.damon.sample.points.app;
 
 import com.damon.sample.points.client.IPointsDeductionAppService;
 import com.damon.sample.points.client.PointsDeductCmd;
-import com.damon.tcc.TccSubConfig;
 import com.damon.tcc.TccSubService;
+import com.damon.tcc.config.TccSubConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,6 +24,7 @@ public class PointsDeductionAppService extends TccSubService<Boolean, PointsDedu
 
     /**
      * try执行积分扣减
+     *
      * @param parameter
      * @return
      */
@@ -47,6 +48,7 @@ public class PointsDeductionAppService extends TccSubService<Boolean, PointsDedu
 
     /**
      * commit提交积分扣减
+     *
      * @param parameter
      */
     @Override
@@ -58,8 +60,10 @@ public class PointsDeductionAppService extends TccSubService<Boolean, PointsDedu
             }
         });
     }
+
     /**
      * cancel回顾积分扣减
+     *
      * @param parameter
      */
     @Override

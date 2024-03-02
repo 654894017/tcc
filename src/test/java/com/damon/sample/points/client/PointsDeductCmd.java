@@ -1,8 +1,8 @@
 package com.damon.sample.points.client;
 
-import com.damon.tcc.BizId;
+import com.damon.tcc.annotation.SubBizId;
 
-public class PointsDeductCmd implements BizId {
+public class PointsDeductCmd implements SubBizId {
 
     private Long orderId;
 
@@ -37,5 +37,10 @@ public class PointsDeductCmd implements BizId {
     @Override
     public Long getBizId() {
         return orderId;
+    }
+
+    @Override
+    public Long getSubBizId() {
+        return userId;
     }
 }
