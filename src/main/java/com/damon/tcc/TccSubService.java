@@ -2,14 +2,12 @@ package com.damon.tcc;
 
 import com.damon.tcc.annotation.SubBizId;
 import com.damon.tcc.config.TccSubConfig;
-import com.damon.tcc.exception.TccCancelException;
-import com.damon.tcc.exception.TccCommitException;
-import com.damon.tcc.exception.TccTryException;
 import com.damon.tcc.local_transaction.ILocalTransactionService;
 import com.damon.tcc.sub_handler.TccSubLogCancelHandler;
 import com.damon.tcc.sub_handler.TccSubLogCommitHandler;
 import com.damon.tcc.sub_handler.TccSubLogTryHandler;
 import com.damon.tcc.sub_log.ITccSubLogService;
+import com.damon.tcc.sub_log.TccSubLog;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -40,9 +38,8 @@ public abstract class TccSubService<R, P extends SubBizId> {
      * @param parameter
      * @param attempt
      * @return
-     * @throws TccTryException
      */
-    protected R attempt(P parameter, Function<P, R> attempt) throws TccTryException {
+    protected R attempt(P parameter, Function<P, R> attempt) {
         R result = localTransactionService.execute(() ->
                 new TccSubLogTryHandler<>(tccSubLogService, attempt::apply, bizType).execute(parameter)
         );
@@ -55,14 +52,26 @@ public abstract class TccSubService<R, P extends SubBizId> {
      *
      * @param parameter
      * @param commit
-     * @throws TccCommitException
      */
-    protected void commit(P parameter, Consumer<P> commit) throws TccCommitException {
+    protected void commit(P parameter, Consumer<P> commit) {
+        TccSubLog tccSubLog = tccSubLogService.get(parameter.getBizId(), parameter.getSubBizId());
+        if (tccSubLog == null) {
+            log.warn("找不到对应的业务类型: {}, 业务id: {}, 关联的子事务日志，无法进行commit操作", bizType, parameter.getBizId());
+            return;
+        }
+        if (tccSubLog.isCommited() || tccSubLog.isCanceled()) {
+            log.info("业务类型: {}, 业务id: {}, 关联的子事务日志已完成Commit或Cancel处理，不再继续执行Commit操作 ", bizType, parameter.getBizId());
+            return;
+        }
         localTransactionService.execute(() -> {
-            new TccSubLogCommitHandler<>(tccSubLogService, commit::accept, bizType).execute(parameter);
+            new TccSubLogCommitHandler<>(tccSubLogService, commit::accept, bizType, tccSubLog).execute(parameter);
             return null;
         });
         log.info("子事务业务类型: {}, 业务id : {}, 异步commit成功", bizType, parameter.getBizId());
+    }
+
+    protected void createCancelTccSubLog(P parameter){
+
     }
 
     /**
@@ -70,11 +79,22 @@ public abstract class TccSubService<R, P extends SubBizId> {
      *
      * @param parameter
      * @param cancel
-     * @throws TccCancelException
      */
-    protected void cancel(P parameter, Consumer<P> cancel) throws TccCancelException {
+    protected void cancel(P parameter, Consumer<P> cancel) {
+        TccSubLog tccSubLog = tccSubLogService.get(parameter.getBizId(), parameter.getSubBizId());
+        if (tccSubLog == null) {
+            TccSubLog subLog = new TccSubLog(parameter.getBizId(), parameter.getSubBizId());
+            subLog.cancel();
+            tccSubLogService.create(subLog);
+            log.warn("找不到对应的业务类型: {}, 业务id: {}, 关联的子事务日志信息，无法进行cancel操作", bizType, parameter.getBizId());
+            return;
+        }
+        if (tccSubLog.isCommited() || tccSubLog.isCanceled()) {
+            log.info("业务类型: {}, 业务id: {}, 关联的子事务日志已完成Commit或Cancel处理，不再继续执行Cancel操作 ", bizType, parameter.getBizId());
+            return;
+        }
         localTransactionService.execute(() -> {
-            new TccSubLogCancelHandler<>(tccSubLogService, cancel::accept, bizType).execute(parameter);
+            new TccSubLogCancelHandler<>(tccSubLogService, cancel::accept, bizType, tccSubLog).execute(parameter);
             return null;
         });
         log.info("子事务业务类型: {}, 业务id : {}, 异步cancel成功", bizType, parameter.getBizId());
