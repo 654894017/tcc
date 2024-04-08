@@ -91,7 +91,14 @@ public class OrderSubmitAppService extends TccMainService<Long, Map<String, Bool
         Long orderId = IdUtil.getSnowflakeNextId();
         jdbcTemplate.update("insert into tcc_demo_order(order_id, user_id, status, deduction_points) values (?, ?, ? ,? )", orderId, userId, 0, points);
         Order order = new Order(orderId, 0, userId, points);
-        return super.process(order);
+        try {
+            return super.process(order);
+        } catch (RuntimeException e) {
+            // try  localTransaction  commit  cancel 错误可以通过自定义异常抛出
+            throw e;
+        } catch (Exception e) {
+            throw new RuntimeException("系统异常");
+        }
     }
 
     /**
