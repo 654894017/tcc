@@ -70,10 +70,6 @@ public abstract class TccSubService<R, P extends SubBizId> {
         log.info("子事务业务类型: {}, 业务id : {}, 异步commit成功", bizType, parameter.getBizId());
     }
 
-    protected void createCancelTccSubLog(P parameter){
-
-    }
-
     /**
      * cancel预留的资源
      *
