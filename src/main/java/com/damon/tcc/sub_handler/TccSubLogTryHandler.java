@@ -26,7 +26,7 @@ public class TccSubLogTryHandler<R, P extends SubBizId> {
             tccSubLogService.create(tccSubLog);
             return tryPhaseFunction.apply(parameter);
         } catch (Exception e) {
-            log.error("子事务业务类型: {}, 业务id : {}, try失败", bizType, parameter.getBizId(), e);
+            log.error("子事务业务类型: {}, 业务id : {}, 子业务id : {}, try失败", bizType, parameter.getBizId(), parameter.getSubBizId(), e);
             throw e;
         }
     }
