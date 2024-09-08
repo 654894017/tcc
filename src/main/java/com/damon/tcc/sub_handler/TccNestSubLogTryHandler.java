@@ -8,6 +8,14 @@ import org.slf4j.LoggerFactory;
 
 import java.util.function.BiFunction;
 
+/**
+ * 嵌套子事务try阶段处理器
+ *
+ * @param <R>  try本地事务返回结果数据
+ * @param <PD> try阶段处理结果数据
+ * @param <P>  请求参数
+ * @author xianpinglu
+ */
 public class TccNestSubLogTryHandler<R, PD, P extends SubBizId> {
     private final Logger log = LoggerFactory.getLogger(TccNestSubLogTryHandler.class);
     private final ITccSubLogService tccSubLogService;
@@ -26,7 +34,7 @@ public class TccNestSubLogTryHandler<R, PD, P extends SubBizId> {
             tccSubLogService.create(tccSubLog);
             return localTransactionFunction.apply(parameter, pd);
         } catch (Exception e) {
-            log.error("子事务业务类型: {}, 业务id : {}, try失败", bizType, parameter.getBizId(), e);
+            log.error("子事务业务类型: {}, 业务id : {}, 子业务id : {}, try失败", bizType, parameter.getBizId(), parameter.getSubBizId(), e);
             throw e;
         }
     }

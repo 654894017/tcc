@@ -10,6 +10,7 @@ import java.util.function.Supplier;
 public class DefaultLocalTransactionService implements ILocalTransactionService {
     private final Logger log = LoggerFactory.getLogger(DefaultLocalTransactionService.class);
 
+    @Override
     @Transactional(rollbackFor = Exception.class)
     public <R> R execute(Supplier<R> supplier) {
         boolean isTransactionActive = TransactionSynchronizationManager.isActualTransactionActive();

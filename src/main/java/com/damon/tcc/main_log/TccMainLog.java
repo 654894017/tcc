@@ -46,19 +46,19 @@ public class TccMainLog {
     }
 
     public boolean isCreated() {
-        return this.status == TccMainLogStatusEnum.CREATED.getStatus();
+        return this.status.equals(TccMainLogStatusEnum.CREATED.getStatus());
     }
 
     public boolean isCommited() {
-        return this.status == TccMainLogStatusEnum.COMMITED.getStatus();
+        return this.status.equals(TccMainLogStatusEnum.COMMITED.getStatus());
     }
 
     public boolean isLocalCommited() {
-        return this.status == TccMainLogStatusEnum.LOCAL_COMMITED.getStatus();
+        return this.status.equals(TccMainLogStatusEnum.LOCAL_COMMITED.getStatus());
     }
 
     public boolean isRollbacked() {
-        return this.status == TccMainLogStatusEnum.ROOBACKED.getStatus();
+        return this.status.equals(TccMainLogStatusEnum.ROOBACKED.getStatus());
     }
 
     public Long getBizId() {

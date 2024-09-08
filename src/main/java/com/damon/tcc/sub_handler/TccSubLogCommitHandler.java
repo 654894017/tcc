@@ -28,7 +28,7 @@ public class TccSubLogCommitHandler<P extends SubBizId> {
             tccSubLogService.update(tccSubLog);
             commitPhaseConsumer.accept(parameter);
         } catch (Exception e) {
-            log.error("子事务业务类型: {}, 业务id : {}, commit失败", bizType, parameter.getBizId(), e);
+            log.error("子事务业务类型: {}, 业务id : {}, 子业务id : {}, commit失败", bizType, parameter.getBizId(), parameter.getSubBizId(), e);
             throw e;
         }
     }

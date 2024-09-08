@@ -94,7 +94,7 @@ public abstract class TccMainService<R, PD, P extends BizId> {
         TccMainLog tccMainLog = new TccMainLog(parameter.getBizId());
         tccLogService.create(tccMainLog);
         log.info("业务类型: {}, 业务id : {}, 创建事务日志成功", bizType, parameter.getBizId());
-        PD processData = this.executeTry(parameter);
+        PD processData = this.executeAttempt(parameter);
         log.info("业务类型: {}, 业务id : {}, 预执行成功", bizType, parameter.getBizId());
         R result = this.executeLocalTransaction(parameter, tccMainLog, processData);
         log.info("业务类型: {}, 业务id : {}, 本地事务成功", bizType, parameter.getBizId());
@@ -102,7 +102,7 @@ public abstract class TccMainService<R, PD, P extends BizId> {
         return result;
     }
 
-    private PD executeTry(P parameter) {
+    private PD executeAttempt(P parameter) {
         try {
             return attempt(parameter);
         } catch (Exception exception) {
