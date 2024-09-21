@@ -20,9 +20,70 @@ tcc框架用于解决分布式场景多服务间的事务问题，该框架不�
 
 <https://github.com/654894017/tcc/tree/master/src/test/java/com/damon/sample>
 
-步骤1：运行 com.damon.sample.points.PointsApplication
+步骤1.初始化订单服务数据库表
+```roomsql
+//创建事务表
+CREATE TABLE `tcc_main_log_order` (
+  `biz_id` bigint NOT NULL COMMENT '业务id',
+  `status` int NOT NULL DEFAULT '0' COMMENT '状态: 1 创建事务成功 2  回滚成功  3 完成本地事务成功  4 提交事务成功',
+  `version` int NOT NULL DEFAULT '0' COMMENT '版本号',
+  `last_update_time` bigint NOT NULL DEFAULT '0' COMMENT '最后更新时间',
+  `create_time` bigint NOT NULL DEFAULT '0' COMMENT '创建时间',
+  `checked_times` int NOT NULL DEFAULT '0' COMMENT '失败检查次数',
+  PRIMARY KEY (`biz_id`),
+  KEY `idx_status_checked_times_create_time` (`status`,`checked_times`,`create_time`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin COMMENT='主事务日志表';
 
-步骤2：运行 com.damon.sample.order.TestRun
+//创建订单表
+CREATE TABLE `tcc_demo_order` (
+  `order_id` bigint NOT NULL,
+  `status` int NOT NULL,
+  `user_id` bigint NOT NULL,
+  `deduction_points` bigint DEFAULT NULL,
+  PRIMARY KEY (`order_id`) USING BTREE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;
+```
+步骤2.积分服务创建子事务表
+```roomsql
+//创建子事务表
+CREATE TABLE `tcc_sub_log_order` (
+  `biz_id` bigint NOT NULL COMMENT '业务id',
+  `sub_biz_id` bigint NOT NULL DEFAULT '0' COMMENT '子业务id',
+  `status` int NOT NULL DEFAULT '0' COMMENT '状态: 1 创建事务成功 2  提交事务成功  3 回滚事务成功',
+  `version` int NOT NULL DEFAULT '0' COMMENT '版本号',
+  `last_update_time` bigint NOT NULL DEFAULT '0' COMMENT '最后更新时间',
+  `create_time` bigint NOT NULL DEFAULT '0' COMMENT '创建时间',
+  PRIMARY KEY (`biz_id`,`sub_biz_id`) USING BTREE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin COMMENT='子事务日志表';
+
+//创建积分变动日志表
+CREATE TABLE `tcc_demo_points_changing_log` (
+  `biz_id` bigint NOT NULL,
+  `user_id` bigint NOT NULL,
+  `change_points` bigint NOT NULL,
+  `change_type` int NOT NULL,
+  `status` int NOT NULL,
+  PRIMARY KEY (`biz_id`) USING BTREE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;
+
+//创建用户积分表
+CREATE TABLE `tcc_demo_user_points` (
+  `user_id` bigint NOT NULL,
+  `points` bigint NOT NULL,
+  PRIMARY KEY (`user_id`) USING BTREE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;
+
+//初始化用户积分
+INSERT INTO `tcc_demo_user_points` (`user_id`, `points`) VALUES (12345678, 999999999989989999);
+```
+
+### 注意事项
+
+事务表都是以`tcc_main_log_xxxx` 命名,子事务表都是以`tcc_sub_log_xxxx`命名,`xxxx`为业务分类,例如订单下单的业务,事务表命名为:事务表都是以`tcc_main_log_order`, 子事务表命名为`tcc_sub_log_order`.
+
+步骤3.运行 com.damon.sample.points.PointsApplication
+
+步骤4.运行 com.damon.sample.order.TestRun
 
 ### 下单服务
 
@@ -216,7 +277,7 @@ public class PointsDeductionAppService extends TccSubService<Boolean, PointsDedu
     }
 
     /**
-     * cancel回顾积分扣减
+     * cancel回滚积分扣减
      * @param parameter
      */
     @Override
