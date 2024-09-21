@@ -8,6 +8,7 @@ import org.springframework.jdbc.core.JdbcTemplate;
 
 import javax.sql.DataSource;
 import java.util.List;
+import java.util.Optional;
 
 public class TccSubLogService implements ITccSubLogService {
     private final String INSETR_TCC_SUB_LOG = "insert into tcc_sub_log_%s (biz_id, sub_biz_id, status, last_update_time, create_time, version) values(?, ?, ?, ?, ?, ?)";
@@ -26,7 +27,13 @@ public class TccSubLogService implements ITccSubLogService {
         try {
             jdbcTemplate.update(
                     String.format(INSETR_TCC_SUB_LOG, bizType),
-                    tccSubLog.getBizId(), tccSubLog.getSubBizId(), tccSubLog.getStatus(), tccSubLog.getLastUpdateTime(), tccSubLog.getCreateTime(), tccSubLog.getVersion());
+                    tccSubLog.getBizId(),
+                    tccSubLog.getSubBizId(),
+                    tccSubLog.getStatus(),
+                    tccSubLog.getLastUpdateTime(),
+                    tccSubLog.getCreateTime(),
+                    tccSubLog.getVersion()
+            );
         } catch (DuplicateKeyException e) {
             throw new BizIdConflictException(e);
         }
@@ -36,7 +43,12 @@ public class TccSubLogService implements ITccSubLogService {
     public void update(TccSubLog tccSubLog) {
         int i = jdbcTemplate.update(
                 String.format(UPDATE_TCC_SUB_LOG, bizType),
-                tccSubLog.getStatus(), tccSubLog.getLastUpdateTime(), tccSubLog.getVersion(), tccSubLog.getBizId(), tccSubLog.getSubBizId(), tccSubLog.getVersion() - 1
+                tccSubLog.getStatus(),
+                tccSubLog.getLastUpdateTime(),
+                tccSubLog.getVersion(),
+                tccSubLog.getBizId(),
+                tccSubLog.getSubBizId(),
+                tccSubLog.getVersion() - 1
         );
         if (i != 1) {
             throw new OptimisticLockException("update tcc sub sub log failed");

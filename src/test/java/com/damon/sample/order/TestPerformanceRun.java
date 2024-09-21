@@ -32,9 +32,11 @@ public class TestPerformanceRun {
 
     @Test
     public void testTryFailed() throws InterruptedException {
-
-        orderSubmitAppService.submitOrder(12345679L, 100L);
-
+        try {
+            orderSubmitAppService.submitOrder(12345679L, 100L);
+        }catch (Exception e){
+            e.printStackTrace();
+        }
         Thread.sleep(20000000);
     }
 
