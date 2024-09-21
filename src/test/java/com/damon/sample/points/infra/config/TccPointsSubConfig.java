@@ -31,24 +31,6 @@ public class TccPointsSubConfig {
         return dataSource;
     }
 
-    public static void main(String[] args) throws InterruptedException {
-        JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource());
-        ExecutorService service = Executors.newFixedThreadPool(20);
-        CountDownLatch countDownLatch = new CountDownLatch(20 * 100000);
-        long start = System.currentTimeMillis();
-        for (int i = 0; i < 20; i++) {
-            service.submit(() -> {
-                for (int j = 0; j < 100000; j++) {
-                    jdbcTemplate.update("INSERT INTO `tcc_demo_points_changing_log` (`biz_id`, `user_id`, `change_points`, `change_type`, `status`) VALUES (" + IdUtil.getSnowflakeNextId() + ", 12345678, 100, 1, 1)");
-                    countDownLatch.countDown();
-                }
-            });
-        }
-        countDownLatch.await();
-        System.out.println(System.currentTimeMillis() - start);
-        System.out.println(1);
-    }
-
     @Bean("pointsDefaultLocalTransactionService")
     public DefaultLocalTransactionService pointsDefaultLocalTransactionService() {
         return new DefaultLocalTransactionService();
