@@ -55,6 +55,7 @@ CREATE TABLE `tcc_sub_log_order` (
   `create_time` bigint NOT NULL DEFAULT '0' COMMENT '创建时间',
   PRIMARY KEY (`biz_id`,`sub_biz_id`) USING BTREE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin COMMENT='子事务日志表';
+
 //创建积分变动日志表
 CREATE TABLE `tcc_demo_points_changing_log` (
   `biz_id` bigint NOT NULL,
@@ -64,18 +65,25 @@ CREATE TABLE `tcc_demo_points_changing_log` (
   `status` int NOT NULL,
   PRIMARY KEY (`biz_id`) USING BTREE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;
+
 //创建用户积分表
 CREATE TABLE `tcc_demo_user_points` (
   `user_id` bigint NOT NULL,
   `points` bigint NOT NULL,
   PRIMARY KEY (`user_id`) USING BTREE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;
+
 //初始化用户积分
 INSERT INTO `tcc_demo_user_points` (`user_id`, `points`) VALUES (12345678, 999999999989989999);
 ```
-步骤3：运行 com.damon.sample.points.PointsApplication
 
-步骤4：运行 com.damon.sample.order.TestRun
+### 注意事项
+
+事务表都是以`tcc_main_log_xxxx` 命名,子事务表都是以`tcc_sub_log_xxxx`命名,`xxxx`为业务分类,例如订单下单的业务,事务表命名为:事务表都是以`tcc_main_log_order`, 子事务表命名为`tcc_sub_log_order`.
+
+步骤3.运行 com.damon.sample.points.PointsApplication
+
+步骤4.运行 com.damon.sample.order.TestRun
 
 ### 下单服务
 
@@ -269,7 +277,7 @@ public class PointsDeductionAppService extends TccSubService<Boolean, PointsDedu
     }
 
     /**
-     * cancel回顾积分扣减
+     * cancel回滚积分扣减
      * @param parameter
      */
     @Override
