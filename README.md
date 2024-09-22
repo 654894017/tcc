@@ -22,7 +22,7 @@ tcc框架用于解决分布式场景多服务间的事务问题，该框架不�
 
 步骤1.初始化订单服务数据库表
 ```roomsql
-//创建事务表
+-- 创建事务表
 CREATE TABLE `tcc_main_log_order` (
   `biz_id` bigint NOT NULL COMMENT '业务id',
   `status` int NOT NULL DEFAULT '0' COMMENT '状态: 1 创建事务成功 2  回滚成功  3 完成本地事务成功  4 提交事务成功',
@@ -34,7 +34,7 @@ CREATE TABLE `tcc_main_log_order` (
   KEY `idx_status_checked_times_create_time` (`status`,`checked_times`,`create_time`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin COMMENT='主事务日志表';
 
-//创建订单表
+-- 创建订单表
 CREATE TABLE `tcc_demo_order` (
   `order_id` bigint NOT NULL,
   `status` int NOT NULL,
@@ -45,7 +45,7 @@ CREATE TABLE `tcc_demo_order` (
 ```
 步骤2.积分服务创建子事务表
 ```roomsql
-//创建子事务表
+-- 创建子事务表
 CREATE TABLE `tcc_sub_log_order` (
   `biz_id` bigint NOT NULL COMMENT '业务id',
   `sub_biz_id` bigint NOT NULL DEFAULT '0' COMMENT '子业务id',
@@ -56,7 +56,7 @@ CREATE TABLE `tcc_sub_log_order` (
   PRIMARY KEY (`biz_id`,`sub_biz_id`) USING BTREE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin COMMENT='子事务日志表';
 
-//创建积分变动日志表
+-- 创建积分变动日志表
 CREATE TABLE `tcc_demo_points_changing_log` (
   `biz_id` bigint NOT NULL,
   `user_id` bigint NOT NULL,
@@ -66,20 +66,20 @@ CREATE TABLE `tcc_demo_points_changing_log` (
   PRIMARY KEY (`biz_id`) USING BTREE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;
 
-//创建用户积分表
+-- 创建用户积分表
 CREATE TABLE `tcc_demo_user_points` (
   `user_id` bigint NOT NULL,
   `points` bigint NOT NULL,
   PRIMARY KEY (`user_id`) USING BTREE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;
 
-//初始化用户积分
+-- 初始化用户积分
 INSERT INTO `tcc_demo_user_points` (`user_id`, `points`) VALUES (12345678, 999999999989989999);
 ```
 
 ### 注意事项
 
-事务表都是以`tcc_main_log_xxxx` 命名,子事务表都是以`tcc_sub_log_xxxx`命名,`xxxx`为业务分类,例如订单下单的业务,事务表命名为:事务表都是以`tcc_main_log_order`, 子事务表命名为`tcc_sub_log_order`.
+事务表都是以`tcc_main_log_xxxx` 命名,子事务表都是以`tcc_sub_log_xxxx`命名,`xxxx`为业务分类,例如订单下单的业务,事务表命名为`tcc_main_log_order`, 子事务表命名为`tcc_sub_log_order`.
 
 步骤3.运行 com.damon.sample.points.PointsApplication
 
