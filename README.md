@@ -119,14 +119,14 @@ public class OrderSubmitAppService extends TccMainService<Long, Map<String, Bool
     }
 
     /**
-     * 检查失败的日志，校正事务是否需要回顾还是提交
+     * 检查失败的日志，校正事务是否需要回滚还是提交
      */
     public void executeFailedLogCheck() {
         super.executeFailedLogCheck();
     }
 
     /**
-     * 检查死亡的日志，校正事务是否需要回顾还是提交
+     * 检查死亡的日志，校正事务是否需要回滚还是提交
      */
     public void executeDeadLogCheck() {
         super.executeDeadLogCheck();
