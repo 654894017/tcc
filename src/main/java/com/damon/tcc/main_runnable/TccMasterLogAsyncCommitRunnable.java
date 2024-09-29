@@ -1,6 +1,7 @@
 package com.damon.tcc.main_runnable;
 
 import com.damon.tcc.annotation.BizId;
+import com.damon.tcc.exception.TccCommitException;
 import com.damon.tcc.main_log.ITccMainLogService;
 import com.damon.tcc.main_log.TccMainLog;
 import org.slf4j.Logger;
@@ -37,6 +38,7 @@ public class TccMasterLogAsyncCommitRunnable<O extends BizId> implements Runnabl
             log.info("业务类型: {}, 业务id : {}, 异步commit成功", bizType, object.getBizId());
         } catch (Exception e) {
             log.error("业务类型: {}, 业务id : {}, 异步commit失败", bizType, object.getBizId(), e);
+            throw new TccCommitException(e);
         }
     }
 }

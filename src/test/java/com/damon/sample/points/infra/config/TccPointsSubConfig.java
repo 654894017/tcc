@@ -27,7 +27,7 @@ public class TccPointsSubConfig {
         dataSource.setPassword("root");
         dataSource.setMaximumPoolSize(25);
         dataSource.setMinimumIdle(25);
-        dataSource.setJdbcUrl("jdbc:mysql://localhost:3307/cqrs?allowPublicKeyRetrieval=true&characterEncoding=utf8&useSSL=false&serverTimezone=UTC&rewriteBatchedStatements=true&allowMultiQueries=true");
+        dataSource.setJdbcUrl("jdbc:mysql://localhost:3307/tcc_test?allowPublicKeyRetrieval=true&characterEncoding=utf8&useSSL=false&serverTimezone=UTC&rewriteBatchedStatements=true&allowMultiQueries=true");
         return dataSource;
     }
 

@@ -3,6 +3,8 @@ package com.damon.tcc;
 import cn.hutool.core.thread.NamedThreadFactory;
 import com.damon.tcc.annotation.BizId;
 import com.damon.tcc.config.TccMainConfig;
+import com.damon.tcc.exception.TccLocalTransactionException;
+import com.damon.tcc.exception.TccTryException;
 import com.damon.tcc.local_transaction.ILocalTransactionService;
 import com.damon.tcc.local_transaction.TccLocalTransactionSupplier;
 import com.damon.tcc.main_log.ITccMainLogService;
@@ -19,7 +21,7 @@ import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
 
-public abstract class TccMainService<R, PD, P extends BizId> {
+public abstract class TccMainService<R, D, C extends BizId> {
     private final Logger log = LoggerFactory.getLogger(TccMainService.class);
     private final ExecutorService asyncCommitExecutorService;
     private final ExecutorService asyncCheckExecutorService;
@@ -87,14 +89,20 @@ public abstract class TccMainService<R, PD, P extends BizId> {
     }
 
     /**
+     * 执行业务
+     * <p>
+     * 该方法不会抛出TccCommitException和TccCancelException, 因为commit和cancel方法都是异步执行.
+     *
      * @param parameter
      * @return
+     * @throws TccTryException
+     * @throws TccLocalTransactionException
      */
-    protected R process(P parameter) {
+    protected R process(C parameter) throws TccTryException, TccLocalTransactionException {
         TccMainLog tccMainLog = new TccMainLog(parameter.getBizId());
         tccLogService.create(tccMainLog);
         log.info("业务类型: {}, 业务id : {}, 创建事务日志成功", bizType, parameter.getBizId());
-        PD processData = this.executeAttempt(parameter);
+        D processData = this.executeAttempt(parameter);
         log.info("业务类型: {}, 业务id : {}, 预执行成功", bizType, parameter.getBizId());
         R result = this.executeLocalTransaction(parameter, tccMainLog, processData);
         log.info("业务类型: {}, 业务id : {}, 本地事务成功", bizType, parameter.getBizId());
@@ -102,7 +110,7 @@ public abstract class TccMainService<R, PD, P extends BizId> {
         return result;
     }
 
-    private PD executeAttempt(P parameter) {
+    private D executeAttempt(C parameter) {
         try {
             return attempt(parameter);
         } catch (Exception exception) {
@@ -110,17 +118,17 @@ public abstract class TccMainService<R, PD, P extends BizId> {
             asyncCommitExecutorService.execute(
                     new TccMasterLogAsyncCheckRunnable<>(tccLogService, bizType, this::commit, this::cancel, parameter)
             );
-            throw exception;
+            throw new TccTryException(exception);
         }
     }
 
-    private void executeCommit(P parameter, TccMainLog tccMainLog) {
+    private void executeCommit(C parameter, TccMainLog tccMainLog) {
         asyncCommitExecutorService.execute(
                 new TccMasterLogAsyncCommitRunnable<>(tccLogService, tccMainLog, bizType, this::commit, parameter)
         );
     }
 
-    private R executeLocalTransaction(P parameter, TccMainLog tccMainLog, PD processData) {
+    private R executeLocalTransaction(C parameter, TccMainLog tccMainLog, D processData) {
         try {
             return localTransactionService.execute(
                     new TccLocalTransactionSupplier<>(tccLogService, tccMainLog, this::executeLocalTransaction, parameter, processData)
@@ -130,7 +138,7 @@ public abstract class TccMainService<R, PD, P extends BizId> {
             asyncCommitExecutorService.execute(
                     new TccMasterLogAsyncCheckRunnable<>(tccLogService, bizType, this::commit, this::cancel, parameter)
             );
-            throw exception;
+            throw new TccLocalTransactionException(exception);
         }
     }
 
@@ -140,7 +148,7 @@ public abstract class TccMainService<R, PD, P extends BizId> {
      * @param bizId 实体对象id（业务id）
      * @return
      */
-    protected abstract P callbackParameter(Long bizId);
+    protected abstract C callbackParameter(Long bizId);
 
     /**
      * 业务逻辑错误，建议通过返回自定义异常 BusinessException,
@@ -150,7 +158,7 @@ public abstract class TccMainService<R, PD, P extends BizId> {
      * @param object
      * @return 返回的结果作为本地事务方法的入参(processData)
      */
-    protected abstract PD attempt(P object);
+    protected abstract D attempt(C object);
 
     /**
      * 执行本地事务方法和tcc事务日志在一个事务域内处理
@@ -159,10 +167,10 @@ public abstract class TccMainService<R, PD, P extends BizId> {
      * @param processData attempt 方法返回的结果
      * @return
      */
-    protected abstract R executeLocalTransaction(P object, PD processData);
+    protected abstract R executeLocalTransaction(C object, D processData);
 
-    protected abstract void commit(P object);
+    protected abstract void commit(C object);
 
-    protected abstract void cancel(P object);
+    protected abstract void cancel(C object);
 
 }

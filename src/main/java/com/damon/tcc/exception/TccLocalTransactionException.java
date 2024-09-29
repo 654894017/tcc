@@ -5,4 +5,11 @@ public class TccLocalTransactionException extends RuntimeException {
         super(cause);
     }
 
+    public TccLocalTransactionException(String message) {
+        super(message);
+    }
+
+    public TccLocalTransactionException(String message, Throwable cause) {
+        super(message, cause);
+    }
 }
