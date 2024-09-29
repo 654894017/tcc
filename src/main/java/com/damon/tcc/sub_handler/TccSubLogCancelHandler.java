@@ -1,6 +1,7 @@
 package com.damon.tcc.sub_handler;
 
 import com.damon.tcc.annotation.SubBizId;
+import com.damon.tcc.exception.TccCancelException;
 import com.damon.tcc.sub_log.ITccSubLogService;
 import com.damon.tcc.sub_log.TccSubLog;
 import org.slf4j.Logger;
@@ -29,7 +30,7 @@ public class TccSubLogCancelHandler<P extends SubBizId> {
             cancelPhaseConsumer.accept(parameter);
         } catch (Exception e) {
             log.error("子事务业务类型: {}, 业务id : {}, 子业务id : {}, cancel失败", bizType, parameter.getBizId(), parameter.getSubBizId(), e);
-            throw e;
+            throw new TccCancelException(e);
         }
     }
 }

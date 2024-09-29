@@ -6,6 +6,8 @@ import com.damon.sample.order.domain.IPointsGateway;
 import com.damon.sample.order.domain.Order;
 import com.damon.tcc.TccMainService;
 import com.damon.tcc.config.TccMainConfig;
+import com.damon.tcc.exception.TccLocalTransactionException;
+import com.damon.tcc.exception.TccTryException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.BeanPropertyRowMapper;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -61,12 +63,15 @@ public class OrderSubmitAppService extends TccMainService<Long, Map<String, Bool
     @Override
     public Long submitOrder(Long userId, Long points) {
         Long orderId = IdUtil.getSnowflakeNextId();
-        jdbcTemplate.update("insert into tcc_demo_order(order_id, user_id, status, deduction_points) values (?, ?, ? ,? )", orderId, userId, 0, points);
+        // 预创建订单
+        jdbcTemplate.update("insert into tcc_demo_order(order_id, user_id, status, deduction_points) values (?, ?, ? ,? )",
+                orderId, userId, 0, points);
         Order order = new Order(orderId, 0, userId, points);
         try {
             return super.process(order);
-        } catch (RuntimeException e) {
-            // try  localTransaction  commit  cancel 错误可以通过自定义异常抛出
+        } catch (TccTryException e) {
+            throw e;
+        } catch (TccLocalTransactionException e) {
             throw e;
         } catch (Exception e) {
             throw new RuntimeException("系统异常");

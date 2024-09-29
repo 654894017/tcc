@@ -2,6 +2,9 @@ package com.damon.tcc;
 
 import com.damon.tcc.annotation.SubBizId;
 import com.damon.tcc.config.TccSubNestConfig;
+import com.damon.tcc.exception.TccCancelException;
+import com.damon.tcc.exception.TccCommitException;
+import com.damon.tcc.exception.TccTryException;
 import com.damon.tcc.local_transaction.ILocalTransactionService;
 import com.damon.tcc.sub_handler.TccNestSubLogTryHandler;
 import com.damon.tcc.sub_handler.TccSubLogCancelHandler;
@@ -50,7 +53,7 @@ public abstract class TccSubNestService<R, P extends SubBizId> {
             return result;
         } catch (Exception e) {
             log.error("子事务业务类型: {}, 业务id : {}, try失败", bizType, parameter.getBizId(), e);
-            throw e;
+            throw new TccTryException(e);
         }
 
     }
@@ -79,7 +82,7 @@ public abstract class TccSubNestService<R, P extends SubBizId> {
             log.info("子事务业务类型: {}, 业务id : {}, 异步commit成功", bizType, parameter.getBizId());
         } catch (Exception e) {
             log.error("子事务业务类型: {}, 业务id : {}, commit失败", bizType, parameter.getBizId(), e);
-            throw e;
+            throw new TccCommitException(e);
         }
     }
 
@@ -110,7 +113,7 @@ public abstract class TccSubNestService<R, P extends SubBizId> {
             log.info("子事务业务类型: {}, 业务id : {}, 异步cancel成功", bizType, parameter.getBizId());
         } catch (Exception e) {
             log.error("子事务业务类型: {}, 业务id : {}, cancel失败", bizType, parameter.getBizId(), e);
-            throw e;
+            throw new TccCancelException(e);
         }
     }
 

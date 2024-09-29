@@ -21,6 +21,7 @@ tcc框架用于解决分布式场景多服务间的事务问题，该框架不�
 <https://github.com/654894017/tcc/tree/master/src/test/java/com/damon/sample>
 
 步骤1.初始化订单服务数据库表
+
 ```roomsql
 -- 创建事务表
 CREATE TABLE `tcc_main_log_order` (
@@ -43,7 +44,9 @@ CREATE TABLE `tcc_demo_order` (
   PRIMARY KEY (`order_id`) USING BTREE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;
 ```
+
 步骤2.积分服务创建子事务表
+
 ```roomsql
 -- 创建子事务表
 CREATE TABLE `tcc_sub_log_order` (

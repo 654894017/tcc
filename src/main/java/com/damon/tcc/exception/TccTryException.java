@@ -5,4 +5,11 @@ public class TccTryException extends RuntimeException {
         super(cause);
     }
 
+    public TccTryException(String message, Throwable cause) {
+        super(message, cause);
+    }
+
+    public TccTryException(String message) {
+        super(message);
+    }
 }

@@ -8,7 +8,6 @@ import org.springframework.jdbc.core.JdbcTemplate;
 
 import javax.sql.DataSource;
 import java.util.List;
-import java.util.Optional;
 
 public class TccSubLogService implements ITccSubLogService {
     private final String INSETR_TCC_SUB_LOG = "insert into tcc_sub_log_%s (biz_id, sub_biz_id, status, last_update_time, create_time, version) values(?, ?, ?, ?, ?, ?)";
