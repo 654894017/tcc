@@ -5,4 +5,11 @@ public class TccCancelException extends RuntimeException {
         super(cause);
     }
 
+    public TccCancelException(String message) {
+        super(message);
+    }
+
+    public TccCancelException(String message, Throwable cause) {
+        super(message, cause);
+    }
 }

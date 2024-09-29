@@ -5,4 +5,11 @@ public class TccCommitException extends RuntimeException {
         super(cause);
     }
 
+    public TccCommitException(String message) {
+        super(message);
+    }
+
+    public TccCommitException(String message, Throwable cause) {
+        super(message, cause);
+    }
 }
