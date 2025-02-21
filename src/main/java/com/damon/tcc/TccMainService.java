@@ -4,7 +4,7 @@ import cn.hutool.core.thread.NamedThreadFactory;
 import com.damon.tcc.annotation.BizId;
 import com.damon.tcc.config.TccMainConfig;
 import com.damon.tcc.exception.TccLocalTransactionException;
-import com.damon.tcc.exception.TccTryException;
+import com.damon.tcc.exception.TccPrepareException;
 import com.damon.tcc.local_transaction.ILocalTransactionService;
 import com.damon.tcc.local_transaction.TccLocalTransactionSupplier;
 import com.damon.tcc.main_log.ITccMainLogService;
@@ -95,14 +95,14 @@ public abstract class TccMainService<R, D, C extends BizId> {
      *
      * @param parameter
      * @return
-     * @throws TccTryException
+     * @throws TccPrepareException
      * @throws TccLocalTransactionException
      */
-    protected R process(C parameter) throws TccTryException, TccLocalTransactionException {
+    protected R process(C parameter) throws TccPrepareException, TccLocalTransactionException {
         TccMainLog tccMainLog = new TccMainLog(parameter.getBizId());
         tccLogService.create(tccMainLog);
         log.info("业务类型: {}, 业务id : {}, 创建事务日志成功", bizType, parameter.getBizId());
-        D processData = this.executeAttempt(parameter);
+        D processData = this.executePrepare(parameter);
         log.info("业务类型: {}, 业务id : {}, 预执行成功", bizType, parameter.getBizId());
         R result = this.executeLocalTransaction(parameter, tccMainLog, processData);
         log.info("业务类型: {}, 业务id : {}, 本地事务成功", bizType, parameter.getBizId());
@@ -110,15 +110,15 @@ public abstract class TccMainService<R, D, C extends BizId> {
         return result;
     }
 
-    private D executeAttempt(C parameter) {
+    private D executePrepare(C parameter) {
         try {
-            return attempt(parameter);
+            return prepare(parameter);
         } catch (Exception exception) {
             log.error("业务类型: {}, 业务id : {}, 预执行失败", bizType, parameter.getBizId(), exception);
             asyncCommitExecutorService.execute(
                     new TccMasterLogAsyncCheckRunnable<>(tccLogService, bizType, this::commit, this::cancel, parameter)
             );
-            throw new TccTryException(exception);
+            throw new TccPrepareException(exception);
         }
     }
 
@@ -156,18 +156,18 @@ public abstract class TccMainService<R, D, C extends BizId> {
      * 服务调用者可以比较好的应对较复杂的业务逻辑
      *
      * @param object
-     * @return 返回的结果作为本地事务方法的入参(processData)
+     * @return 返回的结果作为本地事务方法的入参(prepareExecuteResult)
      */
-    protected abstract D attempt(C object);
+    protected abstract D prepare(C object);
 
     /**
      * 执行本地事务方法和tcc事务日志在一个事务域内处理
      *
      * @param object
-     * @param processData attempt 方法返回的结果
+     * @param prepareExecuteResult prepare 方法返回的结果
      * @return
      */
-    protected abstract R executeLocalTransaction(C object, D processData);
+    protected abstract R executeLocalTransaction(C object, D prepareExecuteResult);
 
     protected abstract void commit(C object);
 

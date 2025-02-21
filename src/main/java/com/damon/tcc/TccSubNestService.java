@@ -4,7 +4,7 @@ import com.damon.tcc.annotation.SubBizId;
 import com.damon.tcc.config.TccSubNestConfig;
 import com.damon.tcc.exception.TccCancelException;
 import com.damon.tcc.exception.TccCommitException;
-import com.damon.tcc.exception.TccTryException;
+import com.damon.tcc.exception.TccPrepareException;
 import com.damon.tcc.local_transaction.ILocalTransactionService;
 import com.damon.tcc.sub_handler.TccNestSubLogTryHandler;
 import com.damon.tcc.sub_handler.TccSubLogCancelHandler;
@@ -38,14 +38,14 @@ public abstract class TccSubNestService<R, P extends SubBizId> {
 
     /**
      * @param parameter
-     * @param attemptFunction
+     * @param prepare
      * @param executeLocalTransactionFunction
      * @param <PD>
      * @return
      */
-    protected <PD> R attempt(P parameter, Function<P, PD> attemptFunction, BiFunction<P, PD, R> executeLocalTransactionFunction) {
+    protected <PD> R prepare(P parameter, Function<P, PD> prepare, BiFunction<P, PD, R> executeLocalTransactionFunction) {
         try {
-            PD pd = attemptFunction.apply(parameter);
+            PD pd = prepare.apply(parameter);
             R result = localTransactionService.execute(() ->
                     new TccNestSubLogTryHandler<>(tccSubLogService, executeLocalTransactionFunction, bizType).execute(parameter, pd)
             );
@@ -53,7 +53,7 @@ public abstract class TccSubNestService<R, P extends SubBizId> {
             return result;
         } catch (Exception e) {
             log.error("子事务业务类型: {}, 业务id : {}, try失败", bizType, parameter.getBizId(), e);
-            throw new TccTryException(e);
+            throw new TccPrepareException(e);
         }
 
     }
@@ -88,10 +88,10 @@ public abstract class TccSubNestService<R, P extends SubBizId> {
 
     /**
      * @param parameter
-     * @param cancelConsumer                  调用外部服务先执行cancel动作
+     * @param cancel                  调用外部服务先执行cancel动作
      * @param executeLocalTransactionConsumer 外部服务调用成功后需要执行本地事务
      */
-    protected void cancel(P parameter, Consumer<P> cancelConsumer, Consumer<P> executeLocalTransactionConsumer) {
+    protected void cancel(P parameter, Consumer<P> cancel, Consumer<P> executeLocalTransactionConsumer) {
         try {
             TccSubLog tccSubLog = tccSubLogService.get(parameter.getBizId(), parameter.getSubBizId());
             if (tccSubLog == null) {
@@ -105,7 +105,7 @@ public abstract class TccSubNestService<R, P extends SubBizId> {
                 log.info("业务类型: {}, 业务id: {}, 关联的子事务日志已完成Commit或Cancel处理，不再继续执行Cancelc操作 ", bizType, parameter.getBizId());
                 return;
             }
-            cancelConsumer.accept(parameter);
+            cancel.accept(parameter);
             localTransactionService.execute(() -> {
                 new TccSubLogCancelHandler<>(tccSubLogService, executeLocalTransactionConsumer, bizType, tccSubLog).execute(parameter);
                 return null;

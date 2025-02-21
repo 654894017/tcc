@@ -16,7 +16,7 @@ public class PointsController {
 
     @PostMapping("try_deduction")
     public void deductionTry(@RequestBody PointsDeductCmd cmd) {
-        pointsDeductionAppService.attempt(cmd);
+        pointsDeductionAppService.prepare(cmd);
     }
 
     @PostMapping("commit_deduction")

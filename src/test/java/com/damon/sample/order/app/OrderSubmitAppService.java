@@ -7,7 +7,7 @@ import com.damon.sample.order.domain.Order;
 import com.damon.tcc.TccMainService;
 import com.damon.tcc.config.TccMainConfig;
 import com.damon.tcc.exception.TccLocalTransactionException;
-import com.damon.tcc.exception.TccTryException;
+import com.damon.tcc.exception.TccPrepareException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.BeanPropertyRowMapper;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -69,7 +69,7 @@ public class OrderSubmitAppService extends TccMainService<Long, Map<String, Bool
         Order order = new Order(orderId, 0, userId, points);
         try {
             return super.process(order);
-        } catch (TccTryException e) {
+        } catch (TccPrepareException e) {
             throw e;
         } catch (TccLocalTransactionException e) {
             throw e;
@@ -85,7 +85,7 @@ public class OrderSubmitAppService extends TccMainService<Long, Map<String, Bool
      * @return
      */
     @Override
-    protected Map<String, Boolean> attempt(Order order) {
+    protected Map<String, Boolean> prepare(Order order) {
         Boolean result = pointsGateway.tryDeductionPoints(order.getOrderId(), order.getUserId(), order.getDeductionPoints());
         Map<String, Boolean> map = new HashMap<>();
         map.put("flag", result);

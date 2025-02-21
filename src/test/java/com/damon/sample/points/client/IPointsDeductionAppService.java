@@ -1,7 +1,7 @@
 package com.damon.sample.points.client;
 
 public interface IPointsDeductionAppService {
-    boolean attempt(PointsDeductCmd parameter);
+    boolean prepare(PointsDeductCmd parameter);
 
     void commit(PointsDeductCmd parameter);
 

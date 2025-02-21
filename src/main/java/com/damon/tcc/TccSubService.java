@@ -36,12 +36,12 @@ public abstract class TccSubService<R, P extends SubBizId> {
      * try执行业务，进行资源预留
      *
      * @param parameter
-     * @param attempt
+     * @param prepare
      * @return
      */
-    protected R attempt(P parameter, Function<P, R> attempt) {
+    protected R prepare(P parameter, Function<P, R> prepare) {
         R result = localTransactionService.execute(() ->
-                new TccSubLogTryHandler<>(tccSubLogService, attempt::apply, bizType).execute(parameter)
+                new TccSubLogTryHandler<>(tccSubLogService, prepare::apply, bizType).execute(parameter)
         );
         log.info("子事务业务类型: {}, 业务id : {}, try 成功", bizType, parameter.getBizId());
         return result;

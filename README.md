@@ -249,7 +249,7 @@ public class PointsDeductionAppService extends TccSubService<Boolean, PointsDedu
      */
     @Override
     public boolean attempt(PointsDeductCmd parameter) {
-        return super.attempt(parameter, cmd -> {
+        return super.prepare(parameter, cmd -> {
             int result = jdbcTemplate.update("update tcc_demo_user_points set points = points - ? where user_id = ? and points - ? >= 0",
                     cmd.getDeductionPoints(), cmd.getUserId(), cmd.getDeductionPoints());
             boolean transactionActive = TransactionSynchronizationManager.isActualTransactionActive();
