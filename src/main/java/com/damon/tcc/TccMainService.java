@@ -34,13 +34,22 @@ public abstract class TccMainService<R, D, C extends BizId> {
         this.tccLogService = config.getTccLogService();
         this.bizType = config.getBizType();
         this.localTransactionService = config.getLocalTransactionService();
-        this.asyncCommitExecutorService = new ThreadPoolExecutor(config.getAsyncCommitThreadMinNumber(), config.getAsyncCommitThreadMaxNumber(),
-                120L, TimeUnit.SECONDS, new LinkedBlockingQueue<>(config.getAsyncCommitQueueSize()),
-                new NamedThreadFactory(config.getBizType() + "-tcc-async-commit-pool-", false), new ThreadPoolExecutor.CallerRunsPolicy()
+        this.asyncCommitExecutorService = new ThreadPoolExecutor(
+                config.getAsyncCommitThreadMinNumber(),
+                config.getAsyncCommitThreadMaxNumber(),
+                120L, TimeUnit.SECONDS,
+                new LinkedBlockingQueue<>(config.getAsyncCommitQueueSize()),
+                new NamedThreadFactory(config.getBizType() + "-tcc-async-commit-pool-", false),
+                new ThreadPoolExecutor.CallerRunsPolicy()
         );
-        this.asyncCheckExecutorService = new ThreadPoolExecutor(config.getAsyncCheckThreadMinNumber(), config.getAsyncCheckThreadMaxNumber(),
-                60L, TimeUnit.SECONDS, new LinkedBlockingQueue<>(config.getAsyncCheckQueueSize()),
-                new NamedThreadFactory(config.getBizType() + "-tcc-async-check-pool-", false), new ThreadPoolExecutor.CallerRunsPolicy()
+        this.asyncCheckExecutorService = new ThreadPoolExecutor(
+                config.getAsyncCheckThreadMinNumber(),
+                config.getAsyncCheckThreadMaxNumber(),
+                60L,
+                TimeUnit.SECONDS,
+                new LinkedBlockingQueue<>(config.getAsyncCheckQueueSize()),
+                new NamedThreadFactory(config.getBizType() + "-tcc-async-check-pool-", false),
+                new ThreadPoolExecutor.CallerRunsPolicy()
         );
         this.tccMainConfig = config;
     }
@@ -49,7 +58,11 @@ public abstract class TccMainService<R, D, C extends BizId> {
         Integer failedLogsTotal = tccLogService.getFailedLogsTotal(tccMainConfig.getFailedCheckTimes());
         Integer totalPage = (failedLogsTotal + tccMainConfig.getTccFailedLogPageSize() - 1) / tccMainConfig.getTccFailedLogPageSize();
         return new TccFailedLogIterator(totalPage, pageNumber ->
-                tccLogService.queryFailedLogs(tccMainConfig.getFailedCheckTimes(), tccMainConfig.getTccFailedLogPageSize(), pageNumber)
+                tccLogService.queryFailedLogs(
+                        tccMainConfig.getFailedCheckTimes(),
+                        tccMainConfig.getTccFailedLogPageSize(),
+                        pageNumber
+                )
         );
     }
 
@@ -57,7 +70,11 @@ public abstract class TccMainService<R, D, C extends BizId> {
         Integer deadLogsTotal = tccLogService.getDeadLogsTotal(tccMainConfig.getFailedCheckTimes());
         Integer totalPage = (deadLogsTotal + tccMainConfig.getTccFailedLogPageSize() - 1) / tccMainConfig.getTccFailedLogPageSize();
         return new TccFailedLogIterator(totalPage, pageNumber ->
-                tccLogService.queryDeadLogs(tccMainConfig.getFailedCheckTimes(), tccMainConfig.getTccFailedLogPageSize(), pageNumber)
+                tccLogService.queryDeadLogs(
+                        tccMainConfig.getFailedCheckTimes(),
+                        tccMainConfig.getTccFailedLogPageSize(),
+                        pageNumber
+                )
         );
     }
 
@@ -82,7 +99,14 @@ public abstract class TccMainService<R, D, C extends BizId> {
             List<TccMainLog> tccMainLogs = iterator.next();
             tccMainLogs.forEach(tccLog -> {
                 asyncCheckExecutorService.execute(
-                        new TccMasterLogAsyncCheckRunnable<>(tccLogService, bizType, this::commit, this::cancel, this::callbackParameter, tccLog)
+                        new TccMasterLogAsyncCheckRunnable<>(
+                                tccLogService,
+                                bizType,
+                                this::commit,
+                                this::cancel,
+                                this::callbackParameter,
+                                tccLog
+                        )
                 );
             });
         }
@@ -101,11 +125,11 @@ public abstract class TccMainService<R, D, C extends BizId> {
     protected R process(C parameter) throws TccPrepareException, TccLocalTransactionException {
         TccMainLog tccMainLog = new TccMainLog(parameter.getBizId());
         tccLogService.create(tccMainLog);
-        log.info("业务类型: {}, 业务id : {}, 创建事务日志成功", bizType, parameter.getBizId());
+        log.info("Business Type: {}, Business ID: {}, Transaction log created successfully", bizType, parameter.getBizId());
         D processData = this.executePrepare(parameter);
-        log.info("业务类型: {}, 业务id : {}, 预执行成功", bizType, parameter.getBizId());
+        log.info("Business Type: {}, Business ID: {}, Pre-execution successful", bizType, parameter.getBizId());
         R result = this.executeLocalTransaction(parameter, tccMainLog, processData);
-        log.info("业务类型: {}, 业务id : {}, 本地事务成功", bizType, parameter.getBizId());
+        log.info("Business Type: {}, Business ID: {}, Local transaction successful", bizType, parameter.getBizId());
         this.executeCommit(parameter, tccMainLog);
         return result;
     }
@@ -114,9 +138,15 @@ public abstract class TccMainService<R, D, C extends BizId> {
         try {
             return prepare(parameter);
         } catch (Exception exception) {
-            log.error("业务类型: {}, 业务id : {}, 预执行失败", bizType, parameter.getBizId(), exception);
+            log.error("Business Type: {}, Business ID: {}, Pre-execution failed", bizType, parameter.getBizId(), exception);
             asyncCommitExecutorService.execute(
-                    new TccMasterLogAsyncCheckRunnable<>(tccLogService, bizType, this::commit, this::cancel, parameter)
+                    new TccMasterLogAsyncCheckRunnable<>(
+                            tccLogService,
+                            bizType,
+                            this::commit,
+                            this::cancel,
+                            parameter
+                    )
             );
             throw new TccPrepareException(exception);
         }
@@ -124,19 +154,37 @@ public abstract class TccMainService<R, D, C extends BizId> {
 
     private void executeCommit(C parameter, TccMainLog tccMainLog) {
         asyncCommitExecutorService.execute(
-                new TccMasterLogAsyncCommitRunnable<>(tccLogService, tccMainLog, bizType, this::commit, parameter)
+                new TccMasterLogAsyncCommitRunnable<>(
+                        tccLogService,
+                        tccMainLog,
+                        bizType,
+                        this::commit,
+                        parameter
+                )
         );
     }
 
     private R executeLocalTransaction(C parameter, TccMainLog tccMainLog, D processData) {
         try {
             return localTransactionService.execute(
-                    new TccLocalTransactionSupplier<>(tccLogService, tccMainLog, this::executeLocalTransaction, parameter, processData)
+                    new TccLocalTransactionSupplier<>(
+                            tccLogService,
+                            tccMainLog,
+                            this::executeLocalTransaction,
+                            parameter,
+                            processData
+                    )
             );
         } catch (Exception exception) {
-            log.error("业务类型: {}, 业务id : {}, 本地事务执行失败", bizType, parameter.getBizId(), exception);
+            log.error("Business Type: {}, Business ID: {}, Local transaction execution failed", bizType, parameter.getBizId(), exception);
             asyncCommitExecutorService.execute(
-                    new TccMasterLogAsyncCheckRunnable<>(tccLogService, bizType, this::commit, this::cancel, parameter)
+                    new TccMasterLogAsyncCheckRunnable<>(
+                            tccLogService,
+                            bizType,
+                            this::commit,
+                            this::cancel,
+                            parameter
+                    )
             );
             throw new TccLocalTransactionException(exception);
         }

@@ -43,7 +43,7 @@ public abstract class TccSubService<R, P extends SubBizId> {
         R result = localTransactionService.execute(() ->
                 new TccSubLogTryHandler<>(tccSubLogService, prepare::apply, bizType).execute(parameter)
         );
-        log.info("子事务业务类型: {}, 业务id : {}, try 成功", bizType, parameter.getBizId());
+        log.info("Sub-transaction Business Type: {}, Business ID: {}, prepare succeeded", bizType, parameter.getBizId());
         return result;
     }
 
@@ -56,18 +56,20 @@ public abstract class TccSubService<R, P extends SubBizId> {
     protected void commit(P parameter, Consumer<P> commit) {
         TccSubLog tccSubLog = tccSubLogService.get(parameter.getBizId(), parameter.getSubBizId());
         if (tccSubLog == null) {
-            log.warn("找不到对应的业务类型: {}, 业务id: {}, 关联的子事务日志，无法进行commit操作", bizType, parameter.getBizId());
+            log.warn("Cannot find the corresponding business type: {}, Business ID: {}, associated sub-transaction log, commit operation cannot be performed",
+                    bizType, parameter.getBizId());
             return;
         }
         if (tccSubLog.isCommited() || tccSubLog.isCanceled()) {
-            log.info("业务类型: {}, 业务id: {}, 关联的子事务日志已完成Commit或Cancel处理，不再继续执行Commit操作 ", bizType, parameter.getBizId());
+            log.info("Business Type: {}, Business ID: {}, the associated sub-transaction log has already completed Commit or Cancel processing, skipping Commit operation",
+                    bizType, parameter.getBizId());
             return;
         }
         localTransactionService.execute(() -> {
             new TccSubLogCommitHandler<>(tccSubLogService, commit::accept, bizType, tccSubLog).execute(parameter);
             return null;
         });
-        log.info("子事务业务类型: {}, 业务id : {}, 异步commit成功", bizType, parameter.getBizId());
+        log.info("Sub-transaction Business Type: {}, Business ID: {}, commit succeeded", bizType, parameter.getBizId());
     }
 
     /**
@@ -82,18 +84,20 @@ public abstract class TccSubService<R, P extends SubBizId> {
             TccSubLog subLog = new TccSubLog(parameter.getBizId(), parameter.getSubBizId());
             subLog.cancel();
             tccSubLogService.create(subLog);
-            log.warn("找不到对应的业务类型: {}, 业务id: {}, 关联的子事务日志信息，无法进行cancel操作", bizType, parameter.getBizId());
+            log.warn("Cannot find the corresponding business type: {}, Business ID: {}, associated sub-transaction log, cancel operation cannot be performed",
+                    bizType, parameter.getBizId());
             return;
         }
         if (tccSubLog.isCommited() || tccSubLog.isCanceled()) {
-            log.info("业务类型: {}, 业务id: {}, 关联的子事务日志已完成Commit或Cancel处理，不再继续执行Cancel操作 ", bizType, parameter.getBizId());
+            log.info("Business Type: {}, Business ID: {}, the associated sub-transaction log has already completed Commit or Cancel processing, skipping Cancel operation",
+                    bizType, parameter.getBizId());
             return;
         }
         localTransactionService.execute(() -> {
             new TccSubLogCancelHandler<>(tccSubLogService, cancel::accept, bizType, tccSubLog).execute(parameter);
             return null;
         });
-        log.info("子事务业务类型: {}, 业务id : {}, 异步cancel成功", bizType, parameter.getBizId());
+        log.info("Sub-transaction Business Type: {}, Business ID: {}, asynchronous cancel succeeded", bizType, parameter.getBizId());
     }
 
 }

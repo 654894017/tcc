@@ -15,7 +15,7 @@ public class DefaultLocalTransactionService implements ILocalTransactionService 
     public <R> R execute(Supplier<R> supplier) {
         boolean isTransactionActive = TransactionSynchronizationManager.isActualTransactionActive();
         if (!isTransactionActive) {
-            log.error("spring本地事务不生效，请确认事务配置是否正确");
+            log.error("Spring local transaction is not effective, please verify if the transaction configuration is correct.");
         }
         return supplier.get();
     }

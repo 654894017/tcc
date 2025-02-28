@@ -35,7 +35,8 @@ public class TccNestSubLogTryHandler<R, PD, P extends SubBizId> {
             tccSubLogService.create(tccSubLog);
             return localTransactionFunction.apply(parameter, pd);
         } catch (Exception e) {
-            log.error("子事务业务类型: {}, 业务id : {}, 子业务id : {}, try失败", bizType, parameter.getBizId(), parameter.getSubBizId(), e);
+            log.error("Sub-transaction Business Type: {}, Business ID: {}, Sub-Business ID: {}, try failed",
+                    bizType, parameter.getBizId(), parameter.getSubBizId(), e);
             throw new TccPrepareException(e);
         }
     }

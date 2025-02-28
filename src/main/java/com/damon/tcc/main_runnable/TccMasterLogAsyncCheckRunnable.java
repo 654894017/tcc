@@ -50,13 +50,13 @@ public class TccMasterLogAsyncCheckRunnable<O extends BizId> implements Runnable
             if (parameter == null) {
                 parameter = callbackParameterFunction.apply(tccMainLog.getBizId());
                 if (parameter == null) {
-                    throw new BizIdInvalidException("无效的业务id: " + tccMainLog.getBizId());
+                    throw new BizIdInvalidException("Invalid Business ID: " + tccMainLog.getBizId());
                 }
             }
             if (tccMainLog == null) {
                 tccMainLog = tccLogService.get(parameter.getBizId());
                 if (tccMainLog == null) {
-                    throw new BizIdInvalidException("无效的业务id: " + parameter.getBizId());
+                    throw new BizIdInvalidException("Invalid Business ID: " + parameter.getBizId());
                 }
             }
             this.check(parameter, tccMainLog);
@@ -67,16 +67,16 @@ public class TccMasterLogAsyncCheckRunnable<O extends BizId> implements Runnable
 
     protected void handleException(Exception e) {
         try {
-            log.error("业务类型: {}, 业务id :{}, 异步check失败", bizType, parameter.getBizId(), e);
+            log.error("Business Type: {}, Business ID: {}, Asynchronous check failed", bizType, parameter.getBizId(), e);
             TccMainLog mainLog = tccLogService.get(tccMainLog.getBizId());
             if (mainLog == null) {
-                log.error("业务类型: {}, 业务id :{}, 无效的BizId", bizType, parameter.getBizId(), e);
+                log.error("Business Type: {}, Business ID: {}, Invalid BizId", bizType, parameter.getBizId(), e);
                 return;
             }
             mainLog.check();
             tccLogService.update(mainLog);
         } catch (Exception exception) {
-            log.error("业务类型: {}, 业务id :{}, 更新日志重试次数失败", bizType, parameter.getBizId(), exception);
+            log.error("Business Type: {}, Business ID: {}, Failed to update retry count for log", bizType, parameter.getBizId(), exception);
         }
     }
 
@@ -91,19 +91,20 @@ public class TccMasterLogAsyncCheckRunnable<O extends BizId> implements Runnable
      */
     protected void check(O parameter, TccMainLog tccMainLog) {
         if (tccMainLog.isCommited() || tccMainLog.isRollbacked()) {
-            log.warn("对应的tcclog日志信息已回滚或已提交, 不执行提交状态检查,业务类型: {}, 业务id :{}", bizType, parameter.getBizId());
+            log.warn("The corresponding TCC log has already been committed or rolled back. Skipping commit state check. Business Type: {}, Business ID: {}",
+                    bizType, parameter.getBizId());
             return;
         }
         if (tccMainLog.isLocalCommited()) {
             tccMainLog.commit();
             commitPhaseConsumer.accept(parameter);
             tccLogService.update(tccMainLog);
-            log.info("业务类型: {}, 业务id :{}, 异步重试commit成功", bizType, parameter.getBizId());
+            log.info("Business Type: {}, Business ID: {}, Asynchronous retry commit successful", bizType, parameter.getBizId());
         } else {
             tccMainLog.rollback();
             cancelPhaseConsumer.accept(parameter);
             tccLogService.update(tccMainLog);
-            log.info("业务类型: {}, 业务id :{}, 异步重试cancel成功", bizType, parameter.getBizId());
+            log.info("Business Type: {}, Business ID: {}, Asynchronous retry cancel successful", bizType, parameter.getBizId());
         }
     }
 }

@@ -19,12 +19,12 @@ public class TestPerformanceRun {
 
     @Test
     public void test() throws InterruptedException {
-        CountDownLatch countDownLatch = new CountDownLatch(75 * 1000);
-        ExecutorService executorService = Executors.newFixedThreadPool(75);
+        CountDownLatch countDownLatch = new CountDownLatch(200 * 800);
+        ExecutorService executorService = Executors.newFixedThreadPool(200);
         long start = System.currentTimeMillis();
-        for (int i = 0; i < 75; i++) {
+        for (int i = 0; i < 200; i++) {
             executorService.submit(() -> {
-                for (int j = 0; j < 1000; j++) {
+                for (int j = 0; j < 800; j++) {
                     try{
                         orderSubmitAppService.submitOrder(12345678L, 100L);
                     }finally {
