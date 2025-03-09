@@ -17,13 +17,13 @@ import java.util.function.BiFunction;
  * @param <P>  请求参数
  * @author xianpinglu
  */
-public class TccNestSubLogTryHandler<R, PD, P extends SubBizId> {
-    private final Logger log = LoggerFactory.getLogger(TccNestSubLogTryHandler.class);
+public class TccNestSubLogPrepareHandler<R, PD, P extends SubBizId> {
+    private final Logger log = LoggerFactory.getLogger(TccNestSubLogPrepareHandler.class);
     private final ITccSubLogService tccSubLogService;
     private final BiFunction<P, PD, R> localTransactionFunction;
     private final String bizType;
 
-    public TccNestSubLogTryHandler(ITccSubLogService tccSubLogService, BiFunction<P, PD, R> localTransactionFunction, String bizType) {
+    public TccNestSubLogPrepareHandler(ITccSubLogService tccSubLogService, BiFunction<P, PD, R> localTransactionFunction, String bizType) {
         this.tccSubLogService = tccSubLogService;
         this.localTransactionFunction = localTransactionFunction;
         this.bizType = bizType;

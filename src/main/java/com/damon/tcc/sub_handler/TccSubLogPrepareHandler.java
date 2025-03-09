@@ -9,13 +9,13 @@ import org.slf4j.LoggerFactory;
 
 import java.util.function.Function;
 
-public class TccSubLogTryHandler<R, P extends SubBizId> {
-    private final Logger log = LoggerFactory.getLogger(TccSubLogTryHandler.class);
+public class TccSubLogPrepareHandler<R, P extends SubBizId> {
+    private final Logger log = LoggerFactory.getLogger(TccSubLogPrepareHandler.class);
     private final ITccSubLogService tccSubLogService;
     private final Function<P, R> tryPhaseFunction;
     private final String bizType;
 
-    public TccSubLogTryHandler(ITccSubLogService tccSubLogService, Function<P, R> tryPhaseFunction, String bizType) {
+    public TccSubLogPrepareHandler(ITccSubLogService tccSubLogService, Function<P, R> tryPhaseFunction, String bizType) {
         this.tccSubLogService = tccSubLogService;
         this.tryPhaseFunction = tryPhaseFunction;
         this.bizType = bizType;

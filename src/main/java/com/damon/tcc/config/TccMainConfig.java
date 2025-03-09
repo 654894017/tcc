@@ -27,7 +27,9 @@ public class TccMainConfig {
                 5, 100);
     }
 
-    public TccMainConfig(String bizType, ILocalTransactionService localTransactionService, DataSource dataSource,
+    public TccMainConfig(String bizType,
+                         ILocalTransactionService localTransactionService,
+                         DataSource dataSource,
                          Integer asyncCommitThreadMinNumber,
                          Integer asyncCommitThreadMaxNumber,
                          Integer asyncCommitQueueSize,

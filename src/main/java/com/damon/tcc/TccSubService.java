@@ -5,7 +5,7 @@ import com.damon.tcc.config.TccSubConfig;
 import com.damon.tcc.local_transaction.ILocalTransactionService;
 import com.damon.tcc.sub_handler.TccSubLogCancelHandler;
 import com.damon.tcc.sub_handler.TccSubLogCommitHandler;
-import com.damon.tcc.sub_handler.TccSubLogTryHandler;
+import com.damon.tcc.sub_handler.TccSubLogPrepareHandler;
 import com.damon.tcc.sub_log.ITccSubLogService;
 import com.damon.tcc.sub_log.TccSubLog;
 import org.slf4j.Logger;
@@ -41,7 +41,7 @@ public abstract class TccSubService<R, P extends SubBizId> {
      */
     protected R prepare(P parameter, Function<P, R> prepare) {
         R result = localTransactionService.execute(() ->
-                new TccSubLogTryHandler<>(tccSubLogService, prepare::apply, bizType).execute(parameter)
+                new TccSubLogPrepareHandler<>(tccSubLogService, prepare::apply, bizType).execute(parameter)
         );
         log.info("Sub-transaction Business Type: {}, Business ID: {}, prepare succeeded", bizType, parameter.getBizId());
         return result;

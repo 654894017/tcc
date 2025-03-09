@@ -1,6 +1,8 @@
 package com.damon.tcc.main_log;
 
+import com.damon.tcc.exception.BizIdConflictException;
 import com.damon.tcc.exception.OptimisticLockException;
+import org.springframework.dao.DuplicateKeyException;
 import org.springframework.jdbc.core.BeanPropertyRowMapper;
 import org.springframework.jdbc.core.JdbcTemplate;
 
@@ -25,9 +27,13 @@ public class TccMainLogService implements ITccMainLogService {
 
     @Override
     public void create(TccMainLog tccMainLog) {
-        jdbcTemplate.update(
-                String.format(INSETR_TCC_LOG, bizType),
-                tccMainLog.getBizId(), tccMainLog.getStatus(), tccMainLog.getVersion(), tccMainLog.getCheckedTimes(), tccMainLog.getLastUpdateTime(), tccMainLog.getCreateTime());
+        try {
+            jdbcTemplate.update(
+                    String.format(INSETR_TCC_LOG, bizType),
+                    tccMainLog.getBizId(), tccMainLog.getStatus(), tccMainLog.getVersion(), tccMainLog.getCheckedTimes(), tccMainLog.getLastUpdateTime(), tccMainLog.getCreateTime());
+        } catch (DuplicateKeyException e) {
+            throw new BizIdConflictException(e);
+        }
     }
 
     @Override

@@ -174,7 +174,7 @@ public class OrderSubmitAppService extends TccMainService<Long, Map<String, Bool
      * @return
      */
     @Override
-    protected Map<String, Boolean> attempt(Order order) {
+    protected Map<String, Boolean> prepare(Order order) {
         Boolean result = pointsGateway.tryDeductionPoints(order.getOrderId(), order.getUserId(), order.getDeductionPoints());
         Map<String, Boolean> map = new HashMap<>();
         map.put("flag", result);
@@ -248,7 +248,7 @@ public class PointsDeductionAppService extends TccSubService<Boolean, PointsDedu
      * @return
      */
     @Override
-    public boolean attempt(PointsDeductCmd parameter) {
+    public boolean prepare(PointsDeductCmd parameter) {
         return super.prepare(parameter, cmd -> {
             int result = jdbcTemplate.update("update tcc_demo_user_points set points = points - ? where user_id = ? and points - ? >= 0",
                     cmd.getDeductionPoints(), cmd.getUserId(), cmd.getDeductionPoints());

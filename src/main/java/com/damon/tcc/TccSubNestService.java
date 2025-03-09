@@ -6,7 +6,7 @@ import com.damon.tcc.exception.TccCancelException;
 import com.damon.tcc.exception.TccCommitException;
 import com.damon.tcc.exception.TccPrepareException;
 import com.damon.tcc.local_transaction.ILocalTransactionService;
-import com.damon.tcc.sub_handler.TccNestSubLogTryHandler;
+import com.damon.tcc.sub_handler.TccNestSubLogPrepareHandler;
 import com.damon.tcc.sub_handler.TccSubLogCancelHandler;
 import com.damon.tcc.sub_handler.TccSubLogCommitHandler;
 import com.damon.tcc.sub_log.ITccSubLogService;
@@ -47,7 +47,7 @@ public abstract class TccSubNestService<R, P extends SubBizId> {
         try {
             PD pd = prepare.apply(parameter);
             R result = localTransactionService.execute(() ->
-                    new TccNestSubLogTryHandler<>(tccSubLogService, executeLocalTransactionFunction, bizType).execute(parameter, pd)
+                    new TccNestSubLogPrepareHandler<>(tccSubLogService, executeLocalTransactionFunction, bizType).execute(parameter, pd)
             );
             log.info("Sub-transaction Business Type: {}, Business ID: {}, try succeeded", bizType, parameter.getBizId());
             return result;
@@ -89,7 +89,7 @@ public abstract class TccSubNestService<R, P extends SubBizId> {
 
     /**
      * @param parameter
-     * @param cancel                  调用外部服务先执行cancel动作
+     * @param cancel                          调用外部服务先执行cancel动作
      * @param executeLocalTransactionConsumer 外部服务调用成功后需要执行本地事务
      */
     protected void cancel(P parameter, Consumer<P> cancel, Consumer<P> executeLocalTransactionConsumer) {

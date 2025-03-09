@@ -11,7 +11,7 @@ public class TccSubLog {
 
     public TccSubLog(Long bizId, Long subBizId) {
         this.bizId = bizId;
-        this.status = TccSubLogStatusEnum.TRY.getStatus();
+        this.status = TccSubLogStatusEnum.PREPARE.getStatus();
         this.version = 0;
         this.createTime = System.currentTimeMillis();
         this.lastUpdateTime = createTime;
@@ -34,15 +34,15 @@ public class TccSubLog {
     }
 
     public Boolean isCreated() {
-        return this.status == TccSubLogStatusEnum.TRY.getStatus();
+        return TccSubLogStatusEnum.PREPARE.getStatus().equals(this.status);
     }
 
     public Boolean isCommited() {
-        return this.status == TccSubLogStatusEnum.COMMITTED.getStatus();
+        return TccSubLogStatusEnum.COMMITTED.getStatus().equals(this.status);
     }
 
     public Boolean isCanceled() {
-        return this.status == TccSubLogStatusEnum.CANCELED.getStatus();
+        return TccSubLogStatusEnum.CANCELED.getStatus().equals(this.status);
     }
 
     public Long getBizId() {
