@@ -306,7 +306,37 @@ public class PointsDeductionAppService extends TccSubService<Boolean, PointsDedu
 
 ```
 
+## FAQ
 
+### 1.关于幂等、悬挂、空回滚如何解决？
+
+主要基于执行先判断的思路来实现的，在子系统执行Cancle的时候，都会先判断tcc_sub_log_xxxx这个表的事务事务已经完成或者取消，如果已完成直接不执行业务，如果未执行则执行Cancel业务，同时更新tcc_sub_log_xxxx的日志状态为已取消。最极端情况举一个示例，假如服务提供者try和cancel同时在执行（try因为网络问题非常滞后的到达业务服务器，这时主服务因为等待超时，调用了子服务cancel动作）。主要分两种情况：
+
+1.假如先执行了cancel，在执行Try则不会执行，因为子事务已经取消（tcc_sub_log_xxxx会增加一条取消日志），在执行try操作时会出现索引冲突异常（tcc_sub_log_xxxx表有biz_id + sub_biz_id唯一索引），子事务的try会回滚。
+
+2.假如先执行了try，在执行cancel则会执行正常取消，属于正常情况。还一种情况就是同时执行了Try、cancel操作，这时候只能依赖tcc_sub_log_xxxx表有biz_id + sub_biz_id唯一索引来解决更新冲突问题。假如Try先执行，cacel就会报错，上游服务重新发起cancel即可。假如先执行了cancle，则try会报错（唯一索引冲突），这时不用处理，子事务的try会回滚。
+
+### 2.tcc_sub_log_xxxx表事务需要和本地业务在一个数据库事务？
+
+是的，幂等、悬挂、空回滚问题都是基于tcc_sub_log_xxxx的事务日志表进行的，需要保证业务事务和tcc_sub_log_xxxx表的事务在一个数据库事务下。
+
+### 3.上游系统重放try、commit、cancel怎么处理？
+
+调用方误触发，存在以下几种可能
+
+1.已经commit的事务，调用了cancle，已增加事务是否已commit判断，已commit的事务调用cancel不会执行，同时需要基于tcc_sub_log_xxxx表的version实现的乐观锁来解决更新冲突的问题。
+
+2.已cancel的事务，调用了commit，已增加事务是否已cancel判断，已cancel的事务调用coommit不会执行，同时需要基于tcc_sub_log_xxxx表的version实现的乐观锁来解决更新冲突的问题。
+
+3.已cancel的事务，调用了try，依赖tcc_sub_log_xxxx表biz_id + sub_biz_id唯一索引来解决更新冲突问题。
+
+4.已commit的事务，调用了try，依赖tcc_sub_log_xxxx表biz_id + sub_biz_id唯一索引来解决更新冲突问题。
+
+5.重复try依赖tcc_sub_log_xxxx表biz_id + sub_biz_id唯一索引来解决更新冲突问题。
+
+6.重复commit，已增加事务是否已commit判断，已commit的事务调用commit不会执行，同时需要基于tcc_sub_log_xxxx表的version实现的乐观锁来解决更新冲突的问题。
+
+7.重复cancel，已增加事务是否已cancel判断，已cancel的事务调用cancel不会执行，同时需要基于tcc_sub_log_xxxx表的version实现的乐观锁来解决更新冲突的问题。
 
 
 
