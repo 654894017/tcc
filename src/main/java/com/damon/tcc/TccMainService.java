@@ -123,8 +123,7 @@ public abstract class TccMainService<R, D, C extends BizId> {
      * @throws TccLocalTransactionException
      */
     protected R process(C parameter) throws TccPrepareException, TccLocalTransactionException {
-        TccMainLog tccMainLog = new TccMainLog(parameter.getBizId());
-        tccLogService.create(tccMainLog);
+        TccMainLog tccMainLog = createTccMainLog(parameter);
         log.info("Business Type: {}, Business ID: {}, Transaction log created successfully", bizType, parameter.getBizId());
         D processData = this.executePrepare(parameter);
         log.info("Business Type: {}, Business ID: {}, Pre-execution successful", bizType, parameter.getBizId());
@@ -132,6 +131,12 @@ public abstract class TccMainService<R, D, C extends BizId> {
         log.info("Business Type: {}, Business ID: {}, Local transaction successful", bizType, parameter.getBizId());
         this.executeCommit(parameter, tccMainLog);
         return result;
+    }
+
+    private TccMainLog createTccMainLog(C parameter) {
+        TccMainLog tccMainLog = new TccMainLog(parameter.getBizId());
+        tccLogService.create(tccMainLog);
+        return tccMainLog;
     }
 
     private D executePrepare(C parameter) {
