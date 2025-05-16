@@ -1,0 +1,6 @@
+/target/test-classes/application.yml
+/target/test-classes/application-dev.yml
+/target/test-classes/application-pre.yml
+/target/test-classes/application-prod.yml
+/target/test-classes/sql/order.sql
+/target/test-classes/sql/points.sql

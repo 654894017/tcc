@@ -31,8 +31,8 @@ public class TccOrderConfig {
     public DataSource dataSource() {
         HikariDataSource dataSource = new HikariDataSource();
         dataSource.setUsername("root");
-        dataSource.setPassword("root");
-        dataSource.setJdbcUrl("jdbc:mysql://localhost:3307/tcc_test?allowPublicKeyRetrieval=true&characterEncoding=utf8&useSSL=false&serverTimezone=UTC&rewriteBatchedStatements=true&allowMultiQueries=true");
+        dataSource.setPassword("mysqlroot");
+        dataSource.setJdbcUrl("jdbc:mysql://localhost:3306/tcc?allowPublicKeyRetrieval=true&characterEncoding=utf8&useSSL=false&serverTimezone=UTC&rewriteBatchedStatements=true&allowMultiQueries=true");
         return dataSource;
     }
 
