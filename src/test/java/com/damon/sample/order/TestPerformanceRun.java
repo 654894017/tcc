@@ -25,9 +25,9 @@ public class TestPerformanceRun {
         for (int i = 0; i < 200; i++) {
             executorService.submit(() -> {
                 for (int j = 0; j < 800; j++) {
-                    try{
+                    try {
                         orderSubmitAppService.submitOrder(12345678L, 100L);
-                    }finally {
+                    } finally {
                         countDownLatch.countDown();
                     }
                 }
