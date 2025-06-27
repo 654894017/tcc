@@ -30,6 +30,12 @@ public class TestRun {
     }
 
     @Test
+    public void testDeadLog() throws InterruptedException {
+        orderSubmitAppService.executeDeadLogCheck();
+        Thread.sleep(2000);
+    }
+
+    @Test
     public void testFailedLog() throws InterruptedException {
         orderSubmitAppService.executeFailedLogCheck();
         Thread.sleep(2000);

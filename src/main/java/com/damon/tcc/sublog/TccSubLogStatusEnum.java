@@ -1,4 +1,4 @@
-package com.damon.tcc.sub_log;
+package com.damon.tcc.sublog;
 
 
 public enum TccSubLogStatusEnum {

@@ -74,7 +74,7 @@ public class OrderSubmitAppService extends TccMainService<Long, Map<String, Bool
         } catch (TccLocalTransactionException e) {
             throw e;
         } catch (Exception e) {
-            throw new RuntimeException("系统异常");
+            throw new RuntimeException("系统异常", e);
         }
     }
 

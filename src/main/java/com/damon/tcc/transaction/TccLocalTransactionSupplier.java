@@ -1,8 +1,8 @@
-package com.damon.tcc.local_transaction;
+package com.damon.tcc.transaction;
 
 import com.damon.tcc.annotation.BizId;
-import com.damon.tcc.main_log.ITccMainLogService;
-import com.damon.tcc.main_log.TccMainLog;
+import com.damon.tcc.mainlog.ITccMainLogService;
+import com.damon.tcc.mainlog.TccMainLog;
 
 import java.util.function.BiFunction;
 import java.util.function.Supplier;

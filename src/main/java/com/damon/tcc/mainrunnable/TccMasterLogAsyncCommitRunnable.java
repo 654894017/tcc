@@ -1,9 +1,9 @@
-package com.damon.tcc.main_runnable;
+package com.damon.tcc.mainrunnable;
 
 import com.damon.tcc.annotation.BizId;
 import com.damon.tcc.exception.TccCommitException;
-import com.damon.tcc.main_log.ITccMainLogService;
-import com.damon.tcc.main_log.TccMainLog;
+import com.damon.tcc.mainlog.ITccMainLogService;
+import com.damon.tcc.mainlog.TccMainLog;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
