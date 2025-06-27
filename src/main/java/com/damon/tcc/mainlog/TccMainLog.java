@@ -1,4 +1,4 @@
-package com.damon.tcc.main_log;
+package com.damon.tcc.mainlog;
 
 public class TccMainLog {
     private Long bizId;
@@ -7,6 +7,7 @@ public class TccMainLog {
     private int checkedTimes;
     private Long lastUpdateTime;
     private Long createTime;
+    private String randomFactor;
 
     public TccMainLog(Long bizId) {
         Long createTime = System.currentTimeMillis();

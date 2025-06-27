@@ -1,7 +1,7 @@
 package com.damon.tcc.config;
 
-import com.damon.tcc.local_transaction.ILocalTransactionService;
-import com.damon.tcc.sub_log.ITccSubLogService;
+import com.damon.tcc.sublog.ITccSubLogService;
+import com.damon.tcc.transaction.ILocalTransactionService;
 
 import javax.sql.DataSource;
 

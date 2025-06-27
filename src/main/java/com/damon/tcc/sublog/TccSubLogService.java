@@ -1,4 +1,4 @@
-package com.damon.tcc.sub_log;
+package com.damon.tcc.sublog;
 
 import com.damon.tcc.exception.BizIdConflictException;
 import com.damon.tcc.exception.OptimisticLockException;

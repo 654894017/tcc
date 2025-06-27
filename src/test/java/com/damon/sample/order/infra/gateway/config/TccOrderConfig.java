@@ -1,8 +1,8 @@
 package com.damon.sample.order.infra.gateway.config;
 
 import com.damon.tcc.config.TccMainConfig;
-import com.damon.tcc.local_transaction.DefaultLocalTransactionService;
-import com.damon.tcc.local_transaction.ILocalTransactionService;
+import com.damon.tcc.transaction.DefaultLocalTransactionService;
+import com.damon.tcc.transaction.ILocalTransactionService;
 import com.zaxxer.hikari.HikariDataSource;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;

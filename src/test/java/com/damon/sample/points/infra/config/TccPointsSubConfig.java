@@ -1,9 +1,9 @@
 package com.damon.sample.points.infra.config;
 
 import com.damon.tcc.config.TccSubConfig;
-import com.damon.tcc.local_transaction.DefaultLocalTransactionService;
-import com.damon.tcc.local_transaction.ILocalTransactionService;
-import com.damon.tcc.sub_log.TccSubLogService;
+import com.damon.tcc.transaction.DefaultLocalTransactionService;
+import com.damon.tcc.transaction.ILocalTransactionService;
+import com.damon.tcc.sublog.TccSubLogService;
 import com.zaxxer.hikari.HikariDataSource;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;

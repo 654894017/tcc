@@ -1,4 +1,4 @@
-package com.damon.tcc.main_log;
+package com.damon.tcc.mainlog;
 
 /**
  * 正常状态流转：  1 -> 3 -> 4

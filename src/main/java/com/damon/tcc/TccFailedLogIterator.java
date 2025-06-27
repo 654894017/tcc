@@ -1,6 +1,6 @@
 package com.damon.tcc;
 
-import com.damon.tcc.main_log.TccMainLog;
+import com.damon.tcc.mainlog.TccMainLog;
 
 import java.util.ArrayList;
 import java.util.Iterator;

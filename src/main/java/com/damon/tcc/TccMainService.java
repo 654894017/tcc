@@ -5,12 +5,13 @@ import com.damon.tcc.annotation.BizId;
 import com.damon.tcc.config.TccMainConfig;
 import com.damon.tcc.exception.TccLocalTransactionException;
 import com.damon.tcc.exception.TccPrepareException;
-import com.damon.tcc.local_transaction.ILocalTransactionService;
-import com.damon.tcc.local_transaction.TccLocalTransactionSupplier;
-import com.damon.tcc.main_log.ITccMainLogService;
-import com.damon.tcc.main_log.TccMainLog;
-import com.damon.tcc.main_runnable.TccMasterLogAsyncCheckRunnable;
-import com.damon.tcc.main_runnable.TccMasterLogAsyncCommitRunnable;
+import com.damon.tcc.mainlog.ITccMainLogService;
+import com.damon.tcc.mainlog.TccMainLog;
+import com.damon.tcc.mainrunnable.TccMasterLogAsyncCheckRunnable;
+import com.damon.tcc.mainrunnable.TccMasterLogAsyncCommitRunnable;
+import com.damon.tcc.transaction.ILocalTransactionService;
+import com.damon.tcc.transaction.TccLocalTransactionSupplier;
+import com.damon.tcc.utils.ShardTailNumber;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -54,11 +55,13 @@ public abstract class TccMainService<R, D, C extends BizId> {
         this.tccMainConfig = config;
     }
 
-    protected TccFailedLogIterator queryFailedLogs() {
-        Integer failedLogsTotal = tccLogService.getFailedLogsTotal(tccMainConfig.getFailedCheckTimes());
+    protected TccFailedLogIterator queryFailedLogs(String tailNumber) {
+        Integer failedLogsTotal = tccLogService.getFailedLogsTotal(tailNumber, tccMainConfig.getFailedCheckTimes());
+        log.info("Query failed logs total: {}, tailNumber: {}", failedLogsTotal, tailNumber);
         Integer totalPage = (failedLogsTotal + tccMainConfig.getTccFailedLogPageSize() - 1) / tccMainConfig.getTccFailedLogPageSize();
         return new TccFailedLogIterator(totalPage, pageNumber ->
                 tccLogService.queryFailedLogs(
+                        tailNumber,
                         tccMainConfig.getFailedCheckTimes(),
                         tccMainConfig.getTccFailedLogPageSize(),
                         pageNumber
@@ -66,32 +69,48 @@ public abstract class TccMainService<R, D, C extends BizId> {
         );
     }
 
-    protected TccFailedLogIterator queryDeadLogs() {
-        Integer deadLogsTotal = tccLogService.getDeadLogsTotal(tccMainConfig.getFailedCheckTimes());
+    protected TccFailedLogIterator queryDeadLogs(String tailNumber) {
+        Integer deadLogsTotal = tccLogService.getDeadLogsTotal(tailNumber, tccMainConfig.getFailedCheckTimes());
+        log.info("Query dead logs total: {}, tailNumber: {}", deadLogsTotal, tailNumber);
         Integer totalPage = (deadLogsTotal + tccMainConfig.getTccFailedLogPageSize() - 1) / tccMainConfig.getTccFailedLogPageSize();
         return new TccFailedLogIterator(totalPage, pageNumber ->
                 tccLogService.queryDeadLogs(
+                        tailNumber,
                         tccMainConfig.getFailedCheckTimes(),
                         tccMainConfig.getTccFailedLogPageSize(),
                         pageNumber
                 )
         );
+    }
+
+    protected void executeDeadLogCheck() {
+        this.executeDeadLogCheck(1, 0);
     }
 
     /**
      * 执行一次死信日志检查
      */
-    protected void executeDeadLogCheck() {
-        TccFailedLogIterator iterator = queryDeadLogs();
-        check(iterator);
+    protected void executeDeadLogCheck(Integer shardTotal, Integer shardIndex) {
+        List<String> tailNumbers = new ShardTailNumber(shardTotal, shardIndex, 2).generateTailNumbers();
+        tailNumbers.forEach(tailNumber -> {
+            TccFailedLogIterator iterator = queryDeadLogs(tailNumber);
+            check(iterator);
+        });
+    }
+
+    protected void executeFailedLogCheck() {
+        this.executeFailedLogCheck(1, 0);
     }
 
     /**
      * 执行事务状态检查，供上游业务系统调用
      */
-    protected void executeFailedLogCheck() {
-        TccFailedLogIterator iterator = queryFailedLogs();
-        check(iterator);
+    protected void executeFailedLogCheck(Integer shardTotal, Integer shardIndex) {
+        List<String> tailNumbers = new ShardTailNumber(shardTotal, shardIndex, 2).generateTailNumbers();
+        tailNumbers.forEach(tailNumber -> {
+            TccFailedLogIterator iterator = queryFailedLogs(tailNumber);
+            check(iterator);
+        });
     }
 
     protected void check(TccFailedLogIterator iterator) {
