@@ -15,13 +15,12 @@ public class TccMainLogService implements ITccMainLogService {
     private final String UPDATE_TCC_LOG = "update tcc_main_log_%s set version = ? , status = ?, last_update_time = ?, checked_times = ? where biz_id = ? and version = ?";
     private final String GET_TCC_LOG = "select * from tcc_main_log_%s where biz_id = ? ";
     private final String GET_TCC_FAILED_LOG_TOTAL = "select count(*) from tcc_main_log_%s where status in (1,3) and checked_times < ? and random_factor like ? ";
-    private final String GET_TCC_DEAD_LOG_TOTAL = "select count(*) from tcc_main_log_%s where status in (1,3) and checked_times > ? and random_factor like ?";
+    private final String GET_TCC_DEAD_LOG_TOTAL = "select count(*) from tcc_main_log_%s where status in (1,3) and checked_times >= ? and random_factor like ?";
     private final String QUERY_FAILED_TCC_LOG = "select * from tcc_main_log_%s where status in (1,3) and checked_times < ? and random_factor like ? order by create_time asc limit ?, ?";
     private final String QUERY_DEAD_TCC_LOG = "select * from tcc_main_log_%s where status in (1,3) and checked_times >= ? and random_factor like ? order by create_time asc limit ?, ?";
     private final String bizType;
     private final JdbcTemplate jdbcTemplate;
     private final RandomNumber randomNumber;
-
 
     public TccMainLogService(DataSource dataSource, String bizType) {
         this(dataSource, bizType, 4);
@@ -72,8 +71,8 @@ public class TccMainLogService implements ITccMainLogService {
     public List<TccMainLog> queryFailedLogs(String tailNumber, Integer checkedCount, Integer pageSize, Integer pageNumber) {
         return jdbcTemplate.query(String.format(QUERY_FAILED_TCC_LOG, bizType),
                 new BeanPropertyRowMapper<>(TccMainLog.class),
-                tailNumber + "%",
                 checkedCount,
+                tailNumber + "%",
                 (pageNumber - 1) * pageSize,
                 pageSize
         );
@@ -83,8 +82,8 @@ public class TccMainLogService implements ITccMainLogService {
     public List<TccMainLog> queryDeadLogs(String tailNumber, Integer checkedCount, Integer pageSize, Integer pageNumber) {
         return jdbcTemplate.query(String.format(QUERY_DEAD_TCC_LOG, bizType),
                 new BeanPropertyRowMapper<>(TccMainLog.class),
-                tailNumber + "%",
                 checkedCount,
+                tailNumber + "%",
                 (pageNumber - 1) * pageSize,
                 pageSize
         );
@@ -95,8 +94,8 @@ public class TccMainLogService implements ITccMainLogService {
         return jdbcTemplate.queryForObject(
                 String.format(GET_TCC_FAILED_LOG_TOTAL, bizType),
                 Integer.class,
-                tailNumber,
-                times
+                times,
+                tailNumber
         );
     }
 
@@ -104,8 +103,8 @@ public class TccMainLogService implements ITccMainLogService {
     public Integer getDeadLogsTotal(String tailNumber, Integer times) {
         return jdbcTemplate.queryForObject(String.format(GET_TCC_DEAD_LOG_TOTAL, bizType),
                 Integer.class,
-                tailNumber,
-                times
+                times,
+                tailNumber
         );
     }
 

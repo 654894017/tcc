@@ -2,6 +2,7 @@ CREATE TABLE `tcc_main_log_order`
 (
     `biz_id`           bigint NOT NULL COMMENT '业务id',
     `status`           int    NOT NULL DEFAULT '0' COMMENT '状态: 1 创建事务成功 2  回滚成功  3 完成本地事务成功  4 提交事务成功',
+    `random_factor`    varchar(4) NOT NULL COMMENT '随机因子',
     `version`          int    NOT NULL DEFAULT '0' COMMENT '版本号',
     `last_update_time` bigint NOT NULL DEFAULT '0' COMMENT '最后更新时间',
     `create_time`      bigint NOT NULL DEFAULT '0' COMMENT '创建时间',
