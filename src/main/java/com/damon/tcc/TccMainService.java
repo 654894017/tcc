@@ -85,7 +85,7 @@ public abstract class TccMainService<R, D, C extends BizId> {
     }
 
     private void executeLogCheck(Integer shardTotal, Integer shardIndex, Function<String, TccFailedLogIterator> queryFunc) {
-        List<String> tailNumbers = new ShardTailNumber(shardTotal, shardIndex, 1).generateTailNumbers();
+        List<String> tailNumbers = new ShardTailNumber(shardTotal, shardIndex, tccMainConfig.getTailLength()).generateTailNumbers();
         tailNumbers.forEach(tailNumber -> {
             TccFailedLogIterator iterator = queryFunc.apply(tailNumber);
             check(iterator);

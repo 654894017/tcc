@@ -1,3 +1,4 @@
+
 package com.damon.tcc.config;
 
 import com.damon.tcc.mainlog.ITccMainLogService;
@@ -19,6 +20,7 @@ public class TccMainConfig {
     private final Integer failedCheckTimes;
     private final Integer tccFailedLogPageSize;
     private final DataSource dataSource;
+    private final Integer shardTailLength;
 
     public TccMainConfig(String bizType, ILocalTransactionService localTransactionService, DataSource dataSource) {
         this(bizType, localTransactionService, dataSource,
@@ -27,17 +29,40 @@ public class TccMainConfig {
                 5, 100);
     }
 
-    public TccMainConfig(String bizType,
-                         ILocalTransactionService localTransactionService,
-                         DataSource dataSource,
-                         Integer asyncCommitThreadMinNumber,
-                         Integer asyncCommitThreadMaxNumber,
-                         Integer asyncCommitQueueSize,
-                         Integer asyncCheckThreadMinNumber,
-                         Integer asyncCheckThreadMaxNumber,
-                         Integer asyncCheckQueueSize,
-                         Integer failedCheckTimes,
-                         Integer tccFailedLogPageSize) {
+    public TccMainConfig(
+            String bizType,
+            ILocalTransactionService localTransactionService,
+            DataSource dataSource,
+            Integer asyncCommitThreadMinNumber,
+            Integer asyncCommitThreadMaxNumber,
+            Integer asyncCommitQueueSize,
+            Integer asyncCheckThreadMinNumber,
+            Integer asyncCheckThreadMaxNumber,
+            Integer asyncCheckQueueSize,
+            Integer failedCheckTimes,
+            Integer tccFailedLogPageSize
+    ) {
+        this(bizType, localTransactionService, dataSource,
+                asyncCommitThreadMinNumber, asyncCommitThreadMaxNumber, asyncCommitQueueSize,
+                asyncCheckThreadMinNumber, asyncCheckThreadMaxNumber, asyncCheckQueueSize,
+                failedCheckTimes, tccFailedLogPageSize, 2);
+    }
+
+
+    public TccMainConfig(
+            String bizType,
+            ILocalTransactionService localTransactionService,
+            DataSource dataSource,
+            Integer asyncCommitThreadMinNumber,
+            Integer asyncCommitThreadMaxNumber,
+            Integer asyncCommitQueueSize,
+            Integer asyncCheckThreadMinNumber,
+            Integer asyncCheckThreadMaxNumber,
+            Integer asyncCheckQueueSize,
+            Integer failedCheckTimes,
+            Integer tccFailedLogPageSize,
+            Integer shardTailLength
+    ) {
         this.localTransactionService = localTransactionService;
         this.tccLogService = new TccMainLogService(dataSource, bizType);
         this.bizType = bizType;
@@ -50,6 +75,7 @@ public class TccMainConfig {
         this.failedCheckTimes = failedCheckTimes;
         this.tccFailedLogPageSize = tccFailedLogPageSize;
         this.dataSource = dataSource;
+        this.shardTailLength = shardTailLength;
     }
 
     public Integer getFailedCheckTimes() {
@@ -98,5 +124,9 @@ public class TccMainConfig {
 
     public DataSource getDataSource() {
         return dataSource;
+    }
+
+    public Integer getTailLength() {
+        return shardTailLength;
     }
 }

@@ -20,10 +20,13 @@ public class TccMasterLogAsyncCheckRunnable<O extends BizId> implements Runnable
     private TccMainLog tccMainLog;
     private O parameter;
 
-    public TccMasterLogAsyncCheckRunnable(ITccMainLogService tccLogService, String bizType,
-                                          Consumer<O> commitPhaseConsumer,
-                                          Consumer<O> cancelPhaseConsumer,
-                                          O parameter) {
+    public TccMasterLogAsyncCheckRunnable(
+            ITccMainLogService tccLogService,
+            String bizType,
+            Consumer<O> commitPhaseConsumer,
+            Consumer<O> cancelPhaseConsumer,
+            O parameter
+    ) {
         this.tccLogService = tccLogService;
         this.bizType = bizType;
         this.commitPhaseConsumer = commitPhaseConsumer;
@@ -31,11 +34,13 @@ public class TccMasterLogAsyncCheckRunnable<O extends BizId> implements Runnable
         this.parameter = parameter;
     }
 
-    public TccMasterLogAsyncCheckRunnable(ITccMainLogService tccLogService, String bizType,
-                                          Consumer<O> commitPhaseConsumer,
-                                          Consumer<O> cancelPhaseConsumer,
-                                          Function<Long, O> callbackParameterFunction,
-                                          TccMainLog tccMainLog) {
+    public TccMasterLogAsyncCheckRunnable(
+            ITccMainLogService tccLogService, String bizType,
+            Consumer<O> commitPhaseConsumer,
+            Consumer<O> cancelPhaseConsumer,
+            Function<Long, O> callbackParameterFunction,
+            TccMainLog tccMainLog
+    ) {
         this.callbackParameterFunction = callbackParameterFunction;
         this.tccLogService = tccLogService;
         this.bizType = bizType;
