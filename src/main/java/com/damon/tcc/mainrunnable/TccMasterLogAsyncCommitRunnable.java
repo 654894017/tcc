@@ -17,11 +17,13 @@ public class TccMasterLogAsyncCommitRunnable<O extends BizId> implements Runnabl
     private final Consumer<O> commitPhaseConsumer;
     private final O object;
 
-    public TccMasterLogAsyncCommitRunnable(ITccMainLogService tccLogService,
-                                           TccMainLog tccMainLog,
-                                           String bizType,
-                                           Consumer<O> commitPhaseConsumer,
-                                           O object) {
+    public TccMasterLogAsyncCommitRunnable(
+            ITccMainLogService tccLogService,
+            TccMainLog tccMainLog,
+            String bizType,
+            Consumer<O> commitPhaseConsumer,
+            O object
+    ) {
         this.tccLogService = tccLogService;
         this.tccMainLog = tccMainLog;
         this.bizType = bizType;
