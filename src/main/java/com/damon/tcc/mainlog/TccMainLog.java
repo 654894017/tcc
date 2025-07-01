@@ -114,6 +114,14 @@ public class TccMainLog {
         this.createTime = createTime;
     }
 
+    public String getRandomFactor() {
+        return randomFactor;
+    }
+
+    public void setRandomFactor(String randomFactor) {
+        this.randomFactor = randomFactor;
+    }
+
     @Override
     public String toString() {
         return "TccLog{" +
