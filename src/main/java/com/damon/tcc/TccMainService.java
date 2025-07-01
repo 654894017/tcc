@@ -20,6 +20,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Function;
 
 
 public abstract class TccMainService<R, D, C extends BizId> {
@@ -83,6 +84,14 @@ public abstract class TccMainService<R, D, C extends BizId> {
         );
     }
 
+    private void executeLogCheck(Integer shardTotal, Integer shardIndex, Function<String, TccFailedLogIterator> queryFunc) {
+        List<String> tailNumbers = new ShardTailNumber(shardTotal, shardIndex, 1).generateTailNumbers();
+        tailNumbers.forEach(tailNumber -> {
+            TccFailedLogIterator iterator = queryFunc.apply(tailNumber);
+            check(iterator);
+        });
+    }
+
     protected void executeDeadLogCheck() {
         this.executeDeadLogCheck(1, 0);
     }
@@ -91,11 +100,7 @@ public abstract class TccMainService<R, D, C extends BizId> {
      * 执行一次死信日志检查
      */
     protected void executeDeadLogCheck(Integer shardTotal, Integer shardIndex) {
-        List<String> tailNumbers = new ShardTailNumber(shardTotal, shardIndex, 2).generateTailNumbers();
-        tailNumbers.forEach(tailNumber -> {
-            TccFailedLogIterator iterator = queryDeadLogs(tailNumber);
-            check(iterator);
-        });
+        executeLogCheck(shardTotal, shardIndex, this::queryDeadLogs);
     }
 
     protected void executeFailedLogCheck() {
@@ -106,11 +111,7 @@ public abstract class TccMainService<R, D, C extends BizId> {
      * 执行事务状态检查，供上游业务系统调用
      */
     protected void executeFailedLogCheck(Integer shardTotal, Integer shardIndex) {
-        List<String> tailNumbers = new ShardTailNumber(shardTotal, shardIndex, 2).generateTailNumbers();
-        tailNumbers.forEach(tailNumber -> {
-            TccFailedLogIterator iterator = queryFailedLogs(tailNumber);
-            check(iterator);
-        });
+        executeLogCheck(shardTotal, shardIndex, this::queryFailedLogs);
     }
 
     protected void check(TccFailedLogIterator iterator) {
