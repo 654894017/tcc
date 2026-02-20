@@ -1,4 +1,4 @@
-package com.damon.sample.order.domain;
+package com.damon.sample.order.domain.gateway;
 
 public interface IPointsGateway {
     boolean tryDeductionPoints(Long orderId, Long userId, Long deductionPoints);

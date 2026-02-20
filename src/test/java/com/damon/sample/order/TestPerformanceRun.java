@@ -1,6 +1,6 @@
 package com.damon.sample.order;
 
-import com.damon.sample.order.app.OrderSubmitAppService;
+import com.damon.sample.order.application.OrderApplicationService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -15,7 +15,7 @@ import java.util.concurrent.Executors;
 @SpringBootTest(classes = OrderApplication.class)
 public class TestPerformanceRun {
     @Autowired
-    private OrderSubmitAppService orderSubmitAppService;
+    private OrderApplicationService orderApplicationService;
 
     @Test
     public void test() throws InterruptedException {
@@ -26,7 +26,7 @@ public class TestPerformanceRun {
             executorService.submit(() -> {
                 for (int j = 0; j < 800; j++) {
                     try {
-                        orderSubmitAppService.submitOrder(12345678L, 100L);
+                        orderApplicationService.submitOrder(12345678L, 100L);
                     } finally {
                         countDownLatch.countDown();
                     }

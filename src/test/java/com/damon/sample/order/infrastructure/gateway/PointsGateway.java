@@ -1,8 +1,8 @@
-package com.damon.sample.order.infra.gateway;
+package com.damon.sample.order.infrastructure.gateway;
 
 import cn.hutool.http.HttpRequest;
 import cn.hutool.http.HttpResponse;
-import com.damon.sample.order.domain.IPointsGateway;
+import com.damon.sample.order.domain.gateway.IPointsGateway;
 import org.springframework.stereotype.Component;
 
 @Component

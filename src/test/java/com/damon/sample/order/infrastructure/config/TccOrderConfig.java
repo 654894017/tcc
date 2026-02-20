@@ -1,4 +1,4 @@
-package com.damon.sample.order.infra.gateway.config;
+package com.damon.sample.order.infrastructure.config;
 
 import com.damon.tcc.config.TccMainConfig;
 import com.damon.tcc.transaction.DefaultLocalTransactionService;
