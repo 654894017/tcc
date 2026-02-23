@@ -22,9 +22,7 @@ public class TccOrderConfig {
     @Bean
     public TccMainConfig tccConfig(@Qualifier("orderDefaultLocalTransactionService") ILocalTransactionService localTransactionService,
                                    DataSource dataSource) {
-        return new TccMainConfig(bizType, localTransactionService, dataSource, 100,
-                100, 1024 * 10, 100,
-                100, 1024 * 10, 5, 100);
+        return new TccMainConfig(bizType, localTransactionService, dataSource);
     }
 
     @Bean

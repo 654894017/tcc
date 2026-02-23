@@ -1,7 +1,6 @@
 package com.damon.sample.points.infra.config;
 
 import com.damon.tcc.config.TccSubConfig;
-import com.damon.tcc.sublog.TccSubLogService;
 import com.damon.tcc.transaction.DefaultLocalTransactionService;
 import com.damon.tcc.transaction.ILocalTransactionService;
 import com.zaxxer.hikari.HikariDataSource;
@@ -13,6 +12,7 @@ import javax.sql.DataSource;
 
 @Configuration
 public class TccPointsSubConfig {
+
     private final String bizType = "order";
 
     @Bean
@@ -32,9 +32,11 @@ public class TccPointsSubConfig {
     }
 
     @Bean
-    public TccSubConfig tccSubConfig(@Qualifier("pointsDefaultLocalTransactionService") ILocalTransactionService localTransactionService,
-                                     DataSource datasource) {
-        return new TccSubConfig(new TccSubLogService(datasource, bizType), localTransactionService, datasource, bizType);
+    public TccSubConfig tccSubConfig(
+            @Qualifier("pointsDefaultLocalTransactionService") ILocalTransactionService localTransactionService,
+            DataSource datasource
+    ) {
+        return new TccSubConfig(datasource, bizType, localTransactionService);
     }
 
 

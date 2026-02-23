@@ -1,9 +1,8 @@
 package com.damon.sample.order.application.executer;
 
 import cn.hutool.core.util.IdUtil;
-import com.damon.sample.order.client.IOrderSubmitAppService;
-import com.damon.sample.order.domain.gateway.IPointsGateway;
 import com.damon.sample.order.domain.Order;
+import com.damon.sample.order.domain.gateway.IPointsGateway;
 import com.damon.tcc.TccMainService;
 import com.damon.tcc.config.TccMainConfig;
 import com.damon.tcc.exception.TccLocalTransactionException;
@@ -17,7 +16,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 @Service
-public class OrderSubmitExecuter extends TccMainService<Long, Map<String, Boolean>, Order>{
+public class OrderSubmitExecuter extends TccMainService<Long, Map<String, Boolean>, Order> {
     private final JdbcTemplate jdbcTemplate;
     private final IPointsGateway pointsGateway;
 
@@ -31,6 +30,7 @@ public class OrderSubmitExecuter extends TccMainService<Long, Map<String, Boolea
     /**
      * 检查失败的日志，用于检查事务是否需要回滚还是提交
      */
+    @Override
     public void executeFailedLogCheck() {
         super.executeFailedLogCheck();
     }
@@ -38,6 +38,7 @@ public class OrderSubmitExecuter extends TccMainService<Long, Map<String, Boolea
     /**
      * 检查死亡的日志，用于纠正事务是否需要回滚还是提交
      */
+    @Override
     public void executeDeadLogCheck() {
         super.executeDeadLogCheck();
     }
@@ -92,7 +93,7 @@ public class OrderSubmitExecuter extends TccMainService<Long, Map<String, Boolea
     }
 
     @Override
-    protected Long executeLocalTransaction(Order object, Map<String, Boolean> map)  {
+    protected Long executeLocalTransaction(Order object, Map<String, Boolean> map) {
         int result = jdbcTemplate.update("update tcc_demo_order set status = ?  where order_id = ? ", 1, object.getOrderId());
         if (result == 0) {
             throw new RuntimeException("无效的订单id : " + object.getOrderId());

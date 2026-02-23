@@ -1,6 +1,7 @@
 package com.damon.tcc.config;
 
 import com.damon.tcc.sublog.ITccSubLogService;
+import com.damon.tcc.sublog.TccSubLogService;
 import com.damon.tcc.transaction.ILocalTransactionService;
 
 import javax.sql.DataSource;
@@ -12,8 +13,8 @@ public class TccSubConfig {
     private ILocalTransactionService localTransactionService;
     private String bizType;
 
-    public TccSubConfig(ITccSubLogService tccSubLogService, ILocalTransactionService localTransactionService, DataSource dataSource, String bizType) {
-        this.tccSubLogService = tccSubLogService;
+    public TccSubConfig(DataSource dataSource, String bizType, ILocalTransactionService localTransactionService) {
+        this.tccSubLogService = new TccSubLogService(dataSource, bizType);
         this.localTransactionService = localTransactionService;
         this.bizType = bizType;
         this.dataSource = dataSource;

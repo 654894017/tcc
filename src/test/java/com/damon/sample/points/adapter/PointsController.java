@@ -1,6 +1,6 @@
 package com.damon.sample.points.adapter;
 
-import com.damon.sample.points.app.PointsDeductionAppService;
+import com.damon.sample.points.application.PointsDeductionAppService;
 import com.damon.sample.points.client.PointsDeductCmd;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.PostMapping;

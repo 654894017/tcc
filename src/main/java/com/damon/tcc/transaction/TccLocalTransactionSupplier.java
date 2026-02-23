@@ -14,7 +14,13 @@ public class TccLocalTransactionSupplier<R, PD, O extends BizId> implements Supp
     private final O parameter;
     private final PD processData;
 
-    public TccLocalTransactionSupplier(ITccMainLogService tccLogService, TccMainLog tccMainLog, BiFunction<O, PD, R> localTransactionPhaseFunction, O parameter, PD processData) {
+    public TccLocalTransactionSupplier(
+            ITccMainLogService tccLogService,
+            TccMainLog tccMainLog,
+            BiFunction<O, PD, R> localTransactionPhaseFunction,
+            O parameter,
+            PD processData
+    ) {
         this.tccMainLog = tccMainLog;
         this.tccLogService = tccLogService;
         this.localTransactionPhaseFunction = localTransactionPhaseFunction;

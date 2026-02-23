@@ -94,11 +94,11 @@ INSERT INTO `tcc_demo_user_points` (`user_id`, `points`) VALUES (12345678, 99999
 下单服务继承TccMainService服务
 
 ```java
-package com.damon.sample.order.app;
+package com.damon.sample.order.application;
 
 import cn.hutool.core.util.IdUtil;
-import com.damon.sample.order.client.IOrderSubmitAppService;
-import com.damon.sample.order.domain.IPointsGateway;
+import com.damon.sample.order.client.IOrderApplicationService;
+import com.damon.sample.order.domain.gateway.IPointsGateway;
 import com.damon.sample.order.domain.Order;
 import com.damon.tcc.config.TccMainConfig;
 import com.damon.tcc.TccMainService;
@@ -219,7 +219,7 @@ public class OrderSubmitAppService extends TccMainService<Long, Map<String, Bool
 积分服务继承TccSubService服务
 
 ```java
-package com.damon.sample.points.app;
+package com.damon.sample.points.application;
 
 import com.damon.sample.points.client.IPointsDeductionAppService;
 import com.damon.sample.points.client.PointsDeductCmd;
@@ -311,35 +311,44 @@ public class PointsDeductionAppService extends TccSubService<Boolean, PointsDedu
 
 ### 1.关于幂等、悬挂、空回滚如何解决？
 
-采用“执行先判断”的思路。在子系统执行 Cancel 操作时，首先检查 tcc_sub_log_xxxx 表，判断事务是否已经完成或取消。若事务已完成，则不执行业务；若未执行，则执行 Cancel 业务，并将 tcc_sub_log_xxxx 表中的日志状态更新为已取消。
+采用“执行先判断”的思路。在子系统执行 Cancel 操作时，首先检查 tcc_sub_log_xxxx 表，判断事务是否已经完成或取消。若事务已完成，则不执行业务；若未执行，则执行
+Cancel 业务，并将 tcc_sub_log_xxxx 表中的日志状态更新为已取消。
 
-以极端情况为例，当服务提供者的 Try 和 Cancel 操作同时执行（由于网络问题，Try 操作延迟到达业务服务器，主服务因等待超时调用了子服务的 Cancel 动作），分以下情况处理：
+以极端情况为例，当服务提供者的 Try 和 Cancel 操作同时执行（由于网络问题，Try 操作延迟到达业务服务器，主服务因等待超时调用了子服务的
+Cancel 动作），分以下情况处理：
 
-**先执行 Cancel 再执行 Try**：由于子事务已取消（tcc_sub_log_xxxx 表会新增一条取消日志），执行 Try 操作时会因 tcc_sub_log_xxxx 表的 biz_id + sub_biz_id 唯一索引冲突而报错，子事务的 Try 操作将回滚。
+**先执行 Cancel 再执行 Try**：由于子事务已取消（tcc_sub_log_xxxx 表会新增一条取消日志），执行 Try 操作时会因
+tcc_sub_log_xxxx 表的 biz_id + sub_biz_id 唯一索引冲突而报错，子事务的 Try 操作将回滚。
 
 **先执行 Try 再执行 Cancel**：属于正常情况，Cancel 操作会正常执行。
 
-**Try 和 Cancel 同时执行**：依赖 tcc_sub_log_xxxx 表的 biz_id + sub_biz_id 唯一索引解决更新冲突。若 Try 先执行，Cancel 操作会报错，上游服务重新发起 Cancel 即可；若 Cancel 先执行，Try 操作会因唯一索引冲突报错，此时无需处理，子事务的 Try 操作会回滚。
+**Try 和 Cancel 同时执行**：依赖 tcc_sub_log_xxxx 表的 biz_id + sub_biz_id 唯一索引解决更新冲突。若 Try 先执行，Cancel
+操作会报错，上游服务重新发起 Cancel 即可；若 Cancel 先执行，Try 操作会因唯一索引冲突报错，此时无需处理，子事务的 Try 操作会回滚。
 
 ### 2.tcc_sub_log_xxxx表事务需要和本地业务在一个数据库事务？
 
-需要。幂等、悬挂、空回滚问题的解决都依赖于 tcc_sub_log_xxxx 事务日志表，因此必须保证业务事务和 tcc_sub_log_xxxx 表的事务处于同一个数据库事务中。
+需要。幂等、悬挂、空回滚问题的解决都依赖于 tcc_sub_log_xxxx 事务日志表，因此必须保证业务事务和 tcc_sub_log_xxxx
+表的事务处于同一个数据库事务中。
 
 ### 3.上游系统重放try、commit、cancel怎么处理？
 
 调用方误触发的情况及处理方式如下：
 
-1.**已 Commit 的事务调用 Cancel**：增加事务是否已 Commit 的判断，已 Commit 的事务调用 Cancel 时不执行操作，同时使用 tcc_sub_log_xxxx 表的 version 字段实现乐观锁，解决更新冲突问题。
+1.**已 Commit 的事务调用 Cancel**：增加事务是否已 Commit 的判断，已 Commit 的事务调用 Cancel 时不执行操作，同时使用
+tcc_sub_log_xxxx 表的 version 字段实现乐观锁，解决更新冲突问题。
 
-2.**已Cancel 的事务调用 Commit**：增加事务是否已 Cancel 的判断，已 Cancel 的事务调用 Commit 时不执行操作，同样使用 tcc_sub_log_xxxx 表的 version 字段实现乐观锁，解决更新冲突问题。
+2.**已Cancel 的事务调用 Commit**：增加事务是否已 Cancel 的判断，已 Cancel 的事务调用 Commit 时不执行操作，同样使用
+tcc_sub_log_xxxx 表的 version 字段实现乐观锁，解决更新冲突问题。
 
 3.**已Cancel 或已 Commit 的事务调用 Try**：依赖 tcc_sub_log_xxxx 表的 biz_id + sub_biz_id 唯一索引解决更新冲突问题。
 
 4.**重复 Try 操作**：依赖 tcc_sub_log_xxxx 表的 biz_id + sub_biz_id 唯一索引解决更新冲突问题。
 
-5.**重复 Commit 操作**：增加事务是否已 Commit 的判断，已 Commit 的事务调用 Commit 时不执行操作，使用 tcc_sub_log_xxxx 表的 version 字段实现乐观锁，解决更新冲突问题。
+5.**重复 Commit 操作**：增加事务是否已 Commit 的判断，已 Commit 的事务调用 Commit 时不执行操作，使用 tcc_sub_log_xxxx 表的
+version 字段实现乐观锁，解决更新冲突问题。
 
-6.**重复 Cancel 操作**：增加事务是否已 Cancel 的判断，已 Cancel 的事务调用 Cancel 时不执行操作，使用 tcc_sub_log_xxxx 表的 version 字段实现乐观锁，解决更新冲突问题。
+6.**重复 Cancel 操作**：增加事务是否已 Cancel 的判断，已 Cancel 的事务调用 Cancel 时不执行操作，使用 tcc_sub_log_xxxx 表的
+version 字段实现乐观锁，解决更新冲突问题。
 
 
 

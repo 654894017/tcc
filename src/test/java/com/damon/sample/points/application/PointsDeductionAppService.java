@@ -1,4 +1,4 @@
-package com.damon.sample.points.app;
+package com.damon.sample.points.application;
 
 import com.damon.sample.points.client.IPointsDeductionAppService;
 import com.damon.sample.points.client.PointsDeductCmd;
