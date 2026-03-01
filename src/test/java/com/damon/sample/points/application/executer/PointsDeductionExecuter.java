@@ -1,6 +1,5 @@
-package com.damon.sample.points.application;
+package com.damon.sample.points.application.executer;
 
-import com.damon.sample.points.client.IPointsDeductionAppService;
 import com.damon.sample.points.client.PointsDeductCmd;
 import com.damon.tcc.TccSubService;
 import com.damon.tcc.config.TccSubConfig;
@@ -12,12 +11,12 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 @Service
-public class PointsDeductionAppService extends TccSubService<Boolean, PointsDeductCmd> implements IPointsDeductionAppService {
-    private final Logger log = LoggerFactory.getLogger(PointsDeductionAppService.class);
+public class PointsDeductionExecuter extends TccSubService<Boolean, PointsDeductCmd> {
+    private final Logger log = LoggerFactory.getLogger(PointsDeductionExecuter.class);
     private final JdbcTemplate jdbcTemplate;
 
     @Autowired
-    public PointsDeductionAppService(TccSubConfig config) {
+    public PointsDeductionExecuter(TccSubConfig config) {
         super(config);
         this.jdbcTemplate = new JdbcTemplate(config.getDataSource());
     }
@@ -28,7 +27,6 @@ public class PointsDeductionAppService extends TccSubService<Boolean, PointsDedu
      * @param parameter
      * @return
      */
-    @Override
     public boolean prepare(PointsDeductCmd parameter) {
         return super.prepare(parameter, cmd -> {
             int result = jdbcTemplate.update("update tcc_demo_user_points set points = points - ? where user_id = ? and points - ? >= 0",
@@ -51,7 +49,6 @@ public class PointsDeductionAppService extends TccSubService<Boolean, PointsDedu
      *
      * @param parameter
      */
-    @Override
     public void commit(PointsDeductCmd parameter) {
         super.commit(parameter, cmd -> {
             int result = jdbcTemplate.update("update tcc_demo_points_changing_Log set status = 1 where biz_id = ?", cmd.getBizId());
@@ -66,7 +63,6 @@ public class PointsDeductionAppService extends TccSubService<Boolean, PointsDedu
      *
      * @param parameter
      */
-    @Override
     public void cancel(PointsDeductCmd parameter) {
         super.cancel(parameter, cmd -> {
             int result = jdbcTemplate.update("update tcc_demo_points_changing_Log set status = 2 where biz_id = ?", cmd.getBizId());

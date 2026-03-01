@@ -1,6 +1,6 @@
 package com.damon.sample.points.adapter;
 
-import com.damon.sample.points.application.PointsDeductionAppService;
+import com.damon.sample.points.application.PointsApplicationService;
 import com.damon.sample.points.client.PointsDeductCmd;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -12,20 +12,20 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("points")
 public class PointsController {
     @Autowired
-    private PointsDeductionAppService pointsDeductionAppService;
+    private PointsApplicationService pointsApplicationService;
 
     @PostMapping("try_deduction")
     public void deductionTry(@RequestBody PointsDeductCmd cmd) {
-        pointsDeductionAppService.prepare(cmd);
+        pointsApplicationService.prepare(cmd);
     }
 
     @PostMapping("commit_deduction")
     public void deductionCommit(@RequestBody PointsDeductCmd cmd) {
-        pointsDeductionAppService.commit(cmd);
+        pointsApplicationService.commit(cmd);
     }
 
     @PostMapping("cancel_deduction")
     public void deductionCancel(@RequestBody PointsDeductCmd cmd) {
-        pointsDeductionAppService.cancel(cmd);
+        pointsApplicationService.cancel(cmd);
     }
 }
