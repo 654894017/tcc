@@ -22,7 +22,7 @@ server:
 # application.yml
 logging:
   level:
-    com: INFO
-    org.springframework.jdbc.core.JdbcTemplate: INFO
-    org.hibernate.SQL: DEBUG
-    org.hibernate.type.descriptor.sql.BasicBinder: TRACE
+    com.damon: ERROR
+    org.springframework.jdbc.core.JdbcTemplate: ERROR
+    org.hibernate.SQL: ERROR
+    org.hibernate.type.descriptor.sql.BasicBinder: ERROR
